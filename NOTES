@@ -1,0 +1,3 @@
+[SOLVED] 1. when delete user or moving it from or to some group,
+   it's threads are live with user old capabilities
+2. test start&end values in startup when load data from db

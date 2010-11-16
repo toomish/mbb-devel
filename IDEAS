@@ -1,0 +1,15 @@
+unit map control auto/manual
+unit map build
+unit map show inet {n}
+unit map show all
+unit map show latest
+
+map add unit {}
+map del unit {}
+
+map show all
+map get inet {ip} [time]
+map get unit {ip} [time]
+map get consumer {ip} [time]
+map show unit {unit}
+

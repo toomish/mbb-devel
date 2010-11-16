@@ -1,0 +1,154 @@
+~ 1. make sessions and methods for it (kill, show)
+OK 2. mbbd: add user log messages
+? 3. mbbsh: capture entered commands and send it to server as user log
+? 4. add session param to methods log_show and log_set_levels
+? 5. add user param to log (not uid)
+OK 6. add methods to add/del log levels to current
+? 7. checking capabilites is too simple and heavy,
+   make it changing using sessions
+OK 8. make chroot analog in mbbsh for command tree
+9. try compile with -O2 and -O3
+? 10. sessions store by user
+11. realize following commands
+
+add consumer | name
+consumer mod name
+consumer mod time start
+consumer mod time end
+drop consumer
+stop consumer
+show consumers
+
+add accunit | name
+consumer add accunit | consumer_name unit_name
+consumer del accunit | consumer_name unit_name
+accunit mod name
+accunit mod time start
+accunit mod time end
+drop accunit
+stop accunit
+show accunits
+consumer show accunits
+
+accunit add ip | name [!]ip [start [end]]
+accunit del ip | name [!]ip[,n]
+accunit ip mod time start | name [!]ip[,n] start
+accunit ip mod time end | name [!]ip[,n] end
+
+accunit show ip entries | name
+accunit show ip state | name
+accunit show ip map | name
+
+consumer show ip entries | name
+consumer show ip state | name
+consumer show ip map | name
+
+consumer show ip detail entries | name
+consumer show ip detail state | name
+consumer show ip detail map | name
+
+12. abstract consumer hole - for lonely accunits
+13. rewrite code with new functions:
+	mbb_xml_msg_response_ok
+	mbb_xml_msg_response_error
+	xml_tag_newc
+OK 14. add private log level | using self
+15. listen specified threads (for logs)
+16. add self-show-session
+17. add output of log-trace-show more verbose as show-sessions
+18. not delete sessions if they still traced
+19. mbbsh: sort results
+20. add session history
+21. add cd -
+22. add common object for dlink routins as join, detach, remove, etc
+23. add regex grep'ing in show methods
+24. add test id function to mbb_db_seq_nextval
+25. when modify consumer time test if child's times are still ok
+25. multirequest with all methods completion or by first error
+
+-------------------------------------------------------------------
+
+26. add tasks:
+
+task is a work continious during some time with some functions to
+monitor or cancel it's state
+
+example: stat counting, stat detail counting
+
+show tasks
+task show state | id
+task cancel | id
+task pause | id
+task resume | id
+task set callback | id executable
+
+27. tariff ...
+28. dynamic loaded modules
+make referencing of using module's resources
+
+show modules
+module list
+module load | name
+module unload | name
+module show | name
+
+29. netflow же
+30. stat viewing
+
+31. check mbb_log's availability before registration
+32. trace tasks as threads with negative id
+
+-------------------------------------------------------------------
+
+33. netflow calcstat: check time limits for rows
+34. consumer set user, consumer unset user, user show consumers and so on
+35. consumer group and consumer methods for stat retrieving
+36. map find unit
+
+37. attributes for units, consumers, users etc, as var = value
+
+-------------------------------------------------------------------
+
+38. dynamic group management
+39. dynamic methods cap management
+40. allowed hosts for users
+
+41. lua or python module for interacting with mbbd
+42. embedded lua interpreter in mbbd with access to mbb structures
+
+--------------------  pinger  -------------------------------------
+
+43. interface:
+	pinger show active
+	pinger show units
+	pinger reload unit
+	pinger start/stop [unit]
+
+	pinger stat
+
+44. auto session variables, and in modules too
+
+45. urgent tasks:
+	netflow feed by mask * ok
+	session vars * ok
+	apache auth
+46. IMPORTANT: session vars: check for mutex's need !!
+
+47. auth policy: filter by hosts
+
+!!!!!! VERY IMPORTANT
+48. update flag for units ~~~
+PARTLY 49. debug logs for add, drop and mod
+50. show session's log chans, and chan's sessions
+OK 51. restrict admin permissions
+OK 52. add su, reload
+53. netflow shell: ls, cd, pwd
+OK 54. unit map sync - rebuild local map and add to main
+
+55. server stats: func calls, fails, logins and other info
+56. mbbsh: alias, unalias, config file
+57. acl?:
+	add group name
+	group add method name method
+	group del method name method
+	group show methods

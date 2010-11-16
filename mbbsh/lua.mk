@@ -1,0 +1,2 @@
+CFLAGS +=
+LIBS += -llua -lm
