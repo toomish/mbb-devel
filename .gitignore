@@ -1,0 +1,10 @@
+*.o
+*.so
+*~
+.*.swp
+/*.mk
+!/common.mk
+/bin/
+/modules/
+/mbbd/mbbd
+/mbbsh/mbbsh
