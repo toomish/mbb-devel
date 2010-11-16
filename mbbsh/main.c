@@ -4,6 +4,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <setjmp.h>
+
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -28,6 +30,8 @@
 typedef void (*func_entry_t)(gint argc, gchar **argv);
 
 static lua_env_t lua_env = NULL;
+
+static sigjmp_buf jmp_env;
 
 static const gchar *opt_host = "127.0.0.1";
 static const gchar *opt_serv = NULL;
@@ -696,8 +700,16 @@ static gboolean parse_line(gchar *line)
 	return ret;
 }
 
+static void readline_sigint_handler(int signo)
+{
+	if (signo == SIGINT)
+		siglongjmp(jmp_env, 1);
+}
+
 static void readline_loop(char *prompt)
 {
+	struct sigaction act, oact;
+
 	gchar *line;
 	gchar buf[512];
 	gchar *p;
@@ -705,18 +717,32 @@ static void readline_loop(char *prompt)
 	using_history();
 	initialize_readline();
 
-	g_stpcpy(buf, prompt);
-	while ((line = readline(buf)) != NULL) {
-		if (parse_line(line))
-			add_history(line);
-		free(line);
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = readline_sigint_handler;
+	if (sigaction(SIGINT, &act, &oact) < 0)
+		err_sys("sigaction");
 
+	if (sigsetjmp(jmp_env, 1))
+		g_print("\n");
+
+	for (;;) {
 		p = node_getcwd();
 		if (p == NULL)
 			g_stpcpy(buf, prompt);
 		else
 			g_sprintf(buf, "[%s]%s", p, prompt);
+
+		if ((line = readline(buf)) == NULL)
+			break;
+
+		if (parse_line(line))
+			add_history(line);
+		free(line);
+
 	}
+
+	if (sigaction(SIGINT, &oact, NULL) < 0)
+		err_sys("sigaction");
 
 	g_print("\n");
 }
