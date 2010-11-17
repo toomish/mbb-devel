@@ -31,7 +31,6 @@ message (STATUS "  found PostgreSQL, version ${PGSQL_VERSION}")
 _pg_config(includedir PGSQL_INCLUDE_DIRS)
 _pg_config(libdir PGSQL_LIBRARY_DIRS)
 
-# include_directories (${PGSQL_INCLUDE_DIRS})
 link_directories (${PGSQL_LIBRARY_DIRS})
 
 file (GLOB mbbd_sources *.c)

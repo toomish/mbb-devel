@@ -252,17 +252,15 @@ void mbb_db_close(void)
 }
 */
 
-static gboolean make_call(gboolean (*func)(gpointer, GError **), gboolean open,
-			  GError **error)
+static gboolean make_call(gboolean (*callback)(gpointer, GError **),
+			  gboolean open, GError **error)
 {
-	gboolean (*callback)(gpointer, GError **);
 	gpointer conn;
 	gboolean ret;
 
 	conn = db_get_conn(error);
 	g_return_val_if_fail(conn != NULL, FALSE);
 
-	callback = func;
 	if (callback == NULL) {
 		g_set_error(error, MBB_DB_ERROR, MBB_DB_ERROR_UNSUPPORTED,
 			    "unsupported");
