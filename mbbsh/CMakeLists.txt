@@ -13,7 +13,8 @@ include_directories (${LUA_INCLUDE_DIR} ${READLINE_INCLUDE_DIR})
 file (GLOB mbbsh_sources *.c)
 
 add_executable (mbbsh ${mbbsh_sources})
-target_link_libraries (mbbsh mbbutil ${MBB_LIBRARIES} ${LUA_LIBRARIES} ${READLINE_LIBRARY})
+target_link_libraries (mbbsh mbbutil
+	${MBB_LIBRARIES} ${LUA_LIBRARIES} ${READLINE_LIBRARIES})
 
 install (TARGETS mbbsh DESTINATION bin)
 install (DIRECTORY lua DESTINATION share/mbb)
