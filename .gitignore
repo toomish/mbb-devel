@@ -1,9 +1,10 @@
+.*
 *.o
 *.so
 *~
-.*.swp
-/*.mk
-!/common.mk
+
+!.gitignore
+
 /bin/
 /modules/
 /mbbd/mbbd
