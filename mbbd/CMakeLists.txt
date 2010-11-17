@@ -31,10 +31,13 @@ message (STATUS "  found PostgreSQL, version ${PGSQL_VERSION}")
 _pg_config(includedir PGSQL_INCLUDE_DIRS)
 _pg_config(libdir PGSQL_LIBRARY_DIRS)
 
-include_directories (${PGSQL_INCLUDE_DIRS})
+# include_directories (${PGSQL_INCLUDE_DIRS})
 link_directories (${PGSQL_LIBRARY_DIRS})
 
 file (GLOB mbbd_sources *.c)
+
+set_source_files_properties (signaller.c COMPILE_FLAGS -D_GNU_SOURCE)
+set_source_files_properties (psql.c COMPILE_FLAGS -I${PGSQL_INCLUDE_DIRS})
 
 add_executable (mbbd ${mbbd_sources})
 target_link_libraries (mbbd mbbutil pq ${MBB_LIBRARIES})

@@ -252,7 +252,8 @@ void mbb_db_close(void)
 }
 */
 
-static gboolean make_call(glong off, gboolean open, GError **error)
+static gboolean make_call(gboolean (*func)(gpointer, GError **), gboolean open,
+			  GError **error)
 {
 	gboolean (*callback)(gpointer, GError **);
 	gpointer conn;
@@ -261,7 +262,7 @@ static gboolean make_call(glong off, gboolean open, GError **error)
 	conn = db_get_conn(error);
 	g_return_val_if_fail(conn != NULL, FALSE);
 
-	*(gpointer *) &callback = G_STRUCT_MEMBER(gpointer, db, off);
+	callback = func;
 	if (callback == NULL) {
 		g_set_error(error, MBB_DB_ERROR, MBB_DB_ERROR_UNSUPPORTED,
 			    "unsupported");
@@ -283,21 +284,19 @@ static gboolean make_call(glong off, gboolean open, GError **error)
 	return ret;
 }
 
-#define DB_STRUCT_OFFSET(member) G_STRUCT_OFFSET(struct mbb_db, member)
-
 gboolean mbb_db_begin(GError **error)
 {
-	return make_call(DB_STRUCT_OFFSET(begin), TRUE, error);
+	return make_call(db->begin, TRUE, error);
 }
 
 gboolean mbb_db_rollback(GError **error)
 {
-	return make_call(DB_STRUCT_OFFSET(rollback), FALSE, error);
+	return make_call(db->rollback, FALSE, error);
 }
 
 gboolean mbb_db_commit(GError **error)
 {
-	return make_call(DB_STRUCT_OFFSET(commit), FALSE, error);
+	return make_call(db->commit, FALSE, error);
 }
 
 gboolean mbb_db_insert(GError **error, gchar *table, gchar *fmt, ...)

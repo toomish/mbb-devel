@@ -12,6 +12,8 @@ include_directories (${LUA_INCLUDE_DIR} ${READLINE_INCLUDE_DIR})
 
 file (GLOB mbbsh_sources *.c)
 
+set_source_files_properties (luaenv.c COMPILE_FLAGS -D_BSD_SOURCE)
+
 add_executable (mbbsh ${mbbsh_sources})
 target_link_libraries (mbbsh mbbutil
 	${MBB_LIBRARIES} ${LUA_LIBRARIES} ${READLINE_LIBRARIES})

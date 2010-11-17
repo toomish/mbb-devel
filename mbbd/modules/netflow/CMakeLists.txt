@@ -15,7 +15,10 @@ set (FLOW_TOOLS_LIBRARIES -lft -lz)
 
 file (GLOB netflow_sources *.c)
 
-include_directories (${FLOW_TOOLS_INCLUDE_DIR})
 link_directories (${FLOW_TOOLS_LIBRARY_DIR})
+
+set_source_files_properties (flow.c
+	COMPILE_FLAGS "-D_BSD_SOURCE -I${FLOW_TOOLS_INCLUDE_DIR}"
+)
 
 mbb_define_module (netflow "${netflow_sources}" "${FLOW_TOOLS_LIBRARIES}")
