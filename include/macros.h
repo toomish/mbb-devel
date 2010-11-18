@@ -20,7 +20,6 @@
 #define __nonnull(arg) __attribute__ ((nonnull(arg)))
 #endif
 
-/* static inline void final_before__(void) __attribute__ ((always_inline)); */
 static inline void __attribute__ ((always_inline)) final_before__(void) {}
 
 #define on_final __extension__ inline void final_before__(void)
