@@ -19,6 +19,6 @@ struct mbb_settings {
 
 extern struct mbb_settings settings;
 
-gboolean readselfconfig(GError **error);
+gboolean readselfconfig(gchar *path, GError **error);
 
 #endif

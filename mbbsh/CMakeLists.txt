@@ -8,10 +8,13 @@ if (NOT READLINE_FOUND)
 	message (FATAL_ERROR "readline not found")
 endif ()
 
+set (MBBSH_LUA_DIR share/mbb)
+
 include_directories (${LUA_INCLUDE_DIR} ${READLINE_INCLUDE_DIR})
 
 file (GLOB mbbsh_sources *.c)
 
+add_definitions (-DDEFAULT_LUA_DIR=\"${CMAKE_INSTALL_PREFIX}/${MBBSH_LUA_DIR}\")
 set_source_files_properties (luaenv.c COMPILE_FLAGS -D_BSD_SOURCE)
 
 add_executable (mbbsh ${mbbsh_sources})

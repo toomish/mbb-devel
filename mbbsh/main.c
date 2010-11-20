@@ -38,7 +38,7 @@ static const gchar *opt_serv = NULL;
 static const gchar *opt_user;
 static const gchar *opt_pass = NULL;
 static const gchar *opt_key = NULL;
-static const gchar *opt_dir = NULL;
+static const gchar *opt_dir = DEFAULT_LUA_DIR;
 static const gchar *opt_file = NULL;
 static gboolean opt_nosh = FALSE;
 static gboolean opt_follow = FALSE;
@@ -819,7 +819,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 		{ "user", 'u', 0, G_OPTION_ARG_STRING, &opt_user, "login", NULL },
 		{ "pass", 'p', 0, G_OPTION_ARG_STRING, &opt_pass, "password", NULL },
 		{ "key", 'k', 0, G_OPTION_ARG_STRING, &opt_key, "auth key", NULL },
-		{ "init", 'i', 0, G_OPTION_ARG_STRING, &opt_dir, "init.lua directory", NULL },
+		{ "init", 'i', 0, G_OPTION_ARG_STRING, &opt_dir, "init.lua directory", DEFAULT_LUA_DIR },
 		{ "load", 'l', 0, G_OPTION_ARG_STRING, &opt_file, "lua file to execute", NULL },
 		{ "nosh", 'n', 0, G_OPTION_ARG_NONE, &opt_nosh, "no shell, scripts only", NULL },
 		{ "follow", 'f', 0, G_OPTION_ARG_NONE, &opt_follow, "show output when stdin is closed", NULL },
@@ -838,8 +838,6 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 
 	opt_user = g_get_user_name();
 	option_entries[2].arg_description = opt_user;
-	opt_dir = g_strdup_printf("%s/mbblua", g_get_user_config_dir());
-	option_entries[5].arg_description = opt_dir;
 
 	if (read_env_args(&opt_host, &opt_serv)) {
 		option_entries[0].arg_description = opt_host;
@@ -850,7 +848,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 	context = g_option_context_new("- mbb lua shell");
 	g_option_context_add_main_entries(context, option_entries, NULL);
 
-	if (!g_option_context_parse(context, &argc, &argv, &error))
+	if (! g_option_context_parse(context, &argc, &argv, &error))
 		errx(1, "%s", error->message);
 	g_option_context_free(context);
 

@@ -1,7 +1,6 @@
 set (MBB_MODULES attr auth_apache netflow)
 
 set (MBB_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set (MBB_MODULES_INSTALL_DIR lib/mbb)
 
 include_directories (${MBBD_SOURCE_DIR})
 

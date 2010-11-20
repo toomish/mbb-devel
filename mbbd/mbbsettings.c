@@ -100,15 +100,10 @@ static void get_modules(GKeyFile *key_file)
 	g_strfreev(list);
 }
 
-gboolean readselfconfig(GError **error)
+gboolean readselfconfig(gchar *path, GError **error)
 {
 	struct mbb_settings_entry *entry;
 	GKeyFile *key_file;
-	const gchar *home;
-	gchar *path;
-
-	home = g_get_home_dir();
-	path = g_build_filename(home, ".mbbrc", NULL);
 
 	key_file = g_key_file_new();
 	g_key_file_set_list_separator(key_file, ',');
