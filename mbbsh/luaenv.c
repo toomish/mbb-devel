@@ -41,7 +41,7 @@ lua_env_t lua_env_new(gchar *dir)
 		lua_setglobal(ls, "dofile");
 
 		lua_pushstring(ls, dir);
-		lua_setglobal(ls, "__lua_init_dir");
+		lua_setfield(ls, LUA_REGISTRYINDEX, "__lua_init_dir");
 
 		lua_register(ls, "cmd_register", c_cmd_register);
 		lua_register(ls, "xml_tag_next", c_xml_tag_next);
@@ -249,7 +249,7 @@ static gint c_dofile(lua_State *ls)
 	if (strchr(file, '/') != NULL)
 		luaL_error(ls, "invalid arg");
 
-	lua_getglobal(ls, "__lua_init_dir");
+	lua_getfield(ls, LUA_REGISTRYINDEX, "__lua_init_dir");
 	dir = luaL_checkstring(ls, -1);
 	lua_pop(ls, 1);
 
