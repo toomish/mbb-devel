@@ -1,14 +1,14 @@
 xml_tag_meta = {
-	["__index"] = function (tag, key)
-		if key == "__body" then
-			return xml_tag_get_body(tag)
-		elseif string.sub(key, 1, 1) == "_" then
-			key = string.sub(key, 2)
-			return xml_tag_get_attr(tag, key)
-		end
-
-		return xml_tag_get_child(tag, key)
+__index = function (tag, key)
+	if key == "__body" then
+		return xml_tag_get_body(tag)
+	elseif string.sub(key, 1, 1) == "_" then
+		key = string.sub(key, 2)
+		return xml_tag_get_attr(tag, key)
 	end
+
+	return xml_tag_get_child(tag, key)
+end
 }
 
 function xml_meta_get_table(key)
@@ -24,9 +24,8 @@ function xml_meta_get_table(key)
 	return key, "__childs"
 end
 
-xml_meta = {}
-
-xml_meta.__index = function (table, key)
+xml_meta = {
+__index = function (table, key)
 	local t, t_name
 
 	key, t_name = xml_meta_get_table(key)
@@ -68,9 +67,9 @@ xml_meta.__index = function (table, key)
 	end
 
 	return t[key]
-end
+end,
 
-xml_meta.__newindex = function (table, key, value)
+__newindex = function (table, key, value)
 	local t, t_name
 
 	key, t_name = xml_meta_get_table(key)
@@ -92,9 +91,9 @@ xml_meta.__newindex = function (table, key, value)
 	end
 
 	return table
-end
+end,
 
-xml_meta.__tostring = function (xml)
+__tostring = function (xml)
 	local push = function (l, val) l[#l + 1] = val end
 	local l = {}
 
@@ -126,6 +125,7 @@ xml_meta.__tostring = function (xml)
 
 	return table.concat(l)
 end
+}
 
 function xml_tag_iter(tag, ...)
 	local args = { ... }
