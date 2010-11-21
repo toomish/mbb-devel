@@ -54,3 +54,4 @@ target_link_libraries (mbbd mbbutil pq ${MBB_LIBRARIES})
 
 install (TARGETS mbbd DESTINATION bin)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/config/mbbrc DESTINATION ${MBBD_CONF_DIR})
+install (DIRECTORY sql DESTINATION share/mbb)

@@ -6,7 +6,7 @@ include_directories (${MBBD_SOURCE_DIR})
 
 macro (mbb_define_module _name _sources)
 	add_library (${_name} MODULE ${_sources})
-	target_link_libraries (${_name} ${MBB_LIBRARIES})
+# target_link_libraries (${_name} ${MBB_LIBRARIES})
 
 	if (${ARGC} GREATER 2)
 		target_link_libraries (${_name} ${ARGV2})

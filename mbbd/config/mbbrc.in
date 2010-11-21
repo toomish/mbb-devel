@@ -2,28 +2,26 @@
 host = 0.0.0.0
 port = 3000
 
-# http-port = 4444
-
 dbtype = postgres
 modules = netflow.so, attr.so
 
+# http-port = 4444
+
 [db]
-host = localhost
+host = 127.0.0.1
 database = mbb
 
 # login = username
 # secret = password
 
-
 [var]
-# http.url.prefix = /mbb/request/
-
 auth.key.lifetime = 300
 gateway.ipview = true
 map.glue.auto = true
 http.auth.method = plain
-
 module.dir = ${CMAKE_INSTALL_PREFIX}/${MBB_MODULES_INSTALL_DIR}/
+
+# http.url.prefix = /mbb/request/
 
 [cache]
 # netflow.data.dir = /dir/with/netflow/

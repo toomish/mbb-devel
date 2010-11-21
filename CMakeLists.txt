@@ -7,9 +7,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 include (FindPkgConfig)
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules/)
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 
-pkg_check_modules (GLIB REQUIRED glib-2.0>=2.24)
+pkg_check_modules (GLIB REQUIRED glib-2.0>=2.16)
 pkg_check_modules (GTHREAD REQUIRED gthread-2.0)
 
 add_definitions (-DNOCOLOR -DNDEBUG)

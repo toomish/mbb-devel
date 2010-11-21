@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdarg.h>
 #include <errno.h>
 
@@ -15,13 +16,23 @@
 
 #define PROMPT_FMT GREEN "%s" DEF ":" GREEN "%s" DEF ":" GREEN "%d" DEF
 
+static inline const char *path_basename(const char *path)
+{
+	char *s;
+
+	if ((s = strrchr(path, '/')) == NULL)
+		return path;
+
+	return s + 1;
+}
+
 void debug_print_warn(char *file, const char *func, int line, char *fmt, ...)
 {
-	char *s1, *s2;
+	gchar *s1, *s2;
 	va_list ap;
 
 	va_start(ap, fmt);
-	s1 = g_strdup_printf(PROMPT_FMT, file, func, line);
+	s1 = g_strdup_printf(PROMPT_FMT, path_basename(file), func, line);
 	s2 = g_strdup_vprintf(fmt, ap);
 	va_end(ap);
 
@@ -32,11 +43,11 @@ void debug_print_warn(char *file, const char *func, int line, char *fmt, ...)
 
 void debug_print_err(char *file, const char *func, int line, char *fmt, ...)
 {
-	char *s1, *s2;
+	gchar *s1, *s2;
 	va_list ap;
 
 	va_start(ap, fmt);
-	s1 = g_strdup_printf(PROMPT_FMT, file, func, line);
+	s1 = g_strdup_printf(PROMPT_FMT, path_basename(file), func, line);
 	s2 = g_strdup_vprintf(fmt, ap);
 	va_end(ap);
 
