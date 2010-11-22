@@ -14,11 +14,19 @@
 #include "macros.h"
 #include "xmltag.h"
 
-static void gather_unit(MbbUnit *unit, XmlTag *tag)
+struct ans_data {
+	gboolean show_all;
+	XmlTag *tag;
+};
+
+static void gather_unit(MbbUnit *unit, struct ans_data *ad)
 {
 	XmlTag *xt;
 
-	xt = xml_tag_new_child(tag, "unit",
+	if (! ad->show_all && mbb_unit_get_end(unit) != 0)
+			return;
+
+	xt = xml_tag_new_child(ad->tag, "unit",
 		"id", variant_new_int(unit->id),
 		"name", variant_new_string(unit->name),
 		"start", variant_new_long(mbb_unit_get_start(unit)),
@@ -41,7 +49,7 @@ static void gather_unit(MbbUnit *unit, XmlTag *tag)
 		);
 }
 
-static void consumer_show_units(MbbConsumer *con, Regex re, XmlTag *tag)
+static void consumer_show_units(MbbConsumer *con, Regex re, struct ans_data *ad)
 {
 	GSList *list;
 
@@ -49,21 +57,24 @@ static void consumer_show_units(MbbConsumer *con, Regex re, XmlTag *tag)
 		MbbUnit *unit = list->data;
 
 		if (re == NULL || re_ismatch(re, unit->name))
-			gather_unit(list->data, tag);
+			gather_unit(list->data, ad);
 	}
 }
 
-static void user_show_units(MbbUser *user, Regex re, XmlTag *tag)
+static void user_show_units(MbbUser *user, Regex re, struct ans_data *ad)
 {
 	GSList *list;
 
 	for (list = user->childs; list != NULL; list = list->next)
-		consumer_show_units(list->data, re, tag);
+		consumer_show_units(list->data, re, ad);
 }
 
 static void show_units(XmlTag *tag, XmlTag **ans)
 {
 	DEFINE_XTV(XTV_USER_NAME_, XTV_CONSUMER_NAME_, XTV_REGEX_VALUE_);
+
+	struct ans_data ad = { TRUE, NULL };
+
 	gchar *user_name = NULL;
 	gchar *con_name = NULL;
 	Regex re = NULL;
@@ -84,8 +95,8 @@ static void show_units(XmlTag *tag, XmlTag **ans)
 		if (user == NULL) final
 			*ans = mbb_xml_msg(MBB_MSG_UNKNOWN_USER);
 
-		*ans = mbb_xml_msg_ok();
-		user_show_units(user, re, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		user_show_units(user, re, &ad);
 	} else if (con_name != NULL) {
 		MbbConsumer *con;
 
@@ -93,11 +104,11 @@ static void show_units(XmlTag *tag, XmlTag **ans)
 		if (con == NULL) final
 			*ans = mbb_xml_msg(MBB_MSG_UNKNOWN_CONSUMER);
 
-		*ans = mbb_xml_msg_ok();
-		consumer_show_units(con, re, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		consumer_show_units(con, re, &ad);
 	} else {
-		*ans = mbb_xml_msg_ok();
-		mbb_unit_forregex(re, (GFunc) gather_unit, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		mbb_unit_forregex(re, (GFunc) gather_unit, &ad);
 	}
 
 	final {
@@ -109,6 +120,8 @@ static void show_units(XmlTag *tag, XmlTag **ans)
 static void self_show_units(XmlTag *tag, XmlTag **ans)
 {
 	DEFINE_XTV(XTV_CONSUMER_NAME_, XTV_REGEX_VALUE_);
+
+	struct ans_data ad = { FALSE , NULL };
 
 	gchar *name = NULL;
 	MbbUser *user;
@@ -125,8 +138,8 @@ static void self_show_units(XmlTag *tag, XmlTag **ans)
 		*ans = mbb_xml_msg(MBB_MSG_SELF_NOT_EXISTS);
 
 	if (name == NULL) {
-		*ans = mbb_xml_msg_ok();
-		user_show_units(user, re, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		user_show_units(user, re, &ad);
 	} else {
 		MbbConsumer *con;
 
@@ -134,8 +147,8 @@ static void self_show_units(XmlTag *tag, XmlTag **ans)
 		if (con == NULL || con->user != user) final
 			*ans = mbb_xml_msg(MBB_MSG_UNKNOWN_CONSUMER);
 
-		*ans = mbb_xml_msg_ok();
-		consumer_show_units(con, re, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		consumer_show_units(con, re, &ad);
 	}
 
 	final {
@@ -147,6 +160,8 @@ static void self_show_units(XmlTag *tag, XmlTag **ans)
 static void unit_show_self(XmlTag *tag, XmlTag **ans)
 {
 	DEFINE_XTV(XTV_UNIT_NAME);
+
+	struct ans_data ad = { TRUE, NULL };
 
 	MbbUnit *unit;
 	gchar *name;
@@ -161,8 +176,8 @@ static void unit_show_self(XmlTag *tag, XmlTag **ans)
 		*ans = mbb_xml_msg(MBB_MSG_UNKNOWN_UNIT);
 	}
 
-	*ans = mbb_xml_msg_ok();
-	gather_unit(unit, *ans);
+	ad.tag = *ans = mbb_xml_msg_ok();
+	gather_unit(unit, &ad);
 
 	mbb_lock_reader_unlock();
 }
@@ -456,33 +471,37 @@ static void consumer_add_unit(XmlTag *tag, XmlTag **ans)
 	mbb_log_debug("consumer '%s' add unit '%s'", con_name, unit_name);
 }
 
-static void gather_mapped_unit(MbbUnit *unit, XmlTag *tag)
+static void gather_mapped_unit(MbbUnit *unit, struct ans_data *ad)
 {
 	if (mbb_unit_mapped(unit))
-		gather_unit(unit, tag);
+		gather_unit(unit, ad);
 }
 
 static void show_mapped_units(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 {
-	*ans = mbb_xml_msg_ok();
+	struct ans_data ad = {
+		TRUE, *ans = mbb_xml_msg_ok()
+	};
 
 	mbb_lock_reader_lock();
-	mbb_unit_foreach((GFunc) gather_mapped_unit, *ans);
+	mbb_unit_foreach((GFunc) gather_mapped_unit, &ad);
 	mbb_lock_reader_unlock();
 }
 
-static void gather_nomapped_units(MbbUnit *unit, XmlTag *tag)
+static void gather_nomapped_units(MbbUnit *unit, struct ans_data *ad)
 {
 	if (! mbb_unit_mapped(unit))
-		gather_unit(unit, tag);
+		gather_unit(unit, ad);
 }
 
 static void show_nomapped_units(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 {
-	*ans = mbb_xml_msg_ok();
+	struct ans_data ad = {
+		TRUE, *ans = mbb_xml_msg_ok()
+	};
 
 	mbb_lock_reader_lock();
-	mbb_unit_foreach((GFunc) gather_nomapped_units, *ans);
+	mbb_unit_foreach((GFunc) gather_nomapped_units, &ad);
 	mbb_lock_reader_unlock();
 }
 

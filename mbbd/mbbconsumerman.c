@@ -15,11 +15,19 @@
 #include "xmltag.h"
 #include "re.h"
 
-static void gather_consumer(MbbConsumer *con, XmlTag *tag)
+struct ans_data {
+	gboolean show_all;
+	XmlTag *tag;
+};
+
+static void gather_consumer(MbbConsumer *con, struct ans_data *ad)
 {
 	XmlTag *xt;
 
-	xt = xml_tag_add_child(tag, xml_tag_newc(
+	if (! ad->show_all && con->end != 0)
+		return;
+
+	xt = xml_tag_add_child(ad->tag, xml_tag_newc(
 		"consumer",
 		"id", variant_new_int(con->id),
 		"name", variant_new_string(con->name),
@@ -34,7 +42,7 @@ static void gather_consumer(MbbConsumer *con, XmlTag *tag)
 	}
 }
 
-static void user_show_consumers(MbbUser *user, Regex re, XmlTag *tag)
+static void user_show_consumers(MbbUser *user, Regex re, struct ans_data *ad)
 {
 	GSList *list;
 
@@ -42,7 +50,7 @@ static void user_show_consumers(MbbUser *user, Regex re, XmlTag *tag)
 		MbbConsumer *con = list->data;
 
 		if (re == NULL || re_ismatch(re, con->name))
-			gather_consumer(list->data, tag);
+			gather_consumer(list->data, ad);
 	}
 }
 
@@ -50,16 +58,18 @@ static void show_consumers(XmlTag *tag, XmlTag **ans)
 {
 	DEFINE_XTV(XTV_USER_NAME_, XTV_REGEX_VALUE_);
 
+	struct ans_data ad = { TRUE, NULL };
+
 	gchar *name = NULL;
 	Regex re = NULL;
 
 	MBB_XTV_CALL(&name, &re);
 
 	if (name == NULL) {
-		*ans = mbb_xml_msg_ok();
+		ad.tag = *ans = mbb_xml_msg_ok();
 
 		mbb_lock_reader_lock();
-		mbb_consumer_forregex(re, (GFunc) gather_consumer, *ans);
+		mbb_consumer_forregex(re, (GFunc) gather_consumer, &ad);
 		mbb_lock_reader_unlock();
 	} else {
 		MbbUser *user;
@@ -72,8 +82,8 @@ static void show_consumers(XmlTag *tag, XmlTag **ans)
 			re_free(re);
 		}
 
-		*ans = mbb_xml_msg_ok();
-		user_show_consumers(user, re, *ans);
+		ad.tag = *ans = mbb_xml_msg_ok();
+		user_show_consumers(user, re, &ad);
 		mbb_lock_reader_unlock();
 	}
 
@@ -87,6 +97,8 @@ static void self_show_consumers(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 {
 	DEFINE_XTV(XTV_REGEX_VALUE_);
 
+	struct ans_data ad = { FALSE, NULL };
+
 	MbbUser *user;
 	Regex re = NULL;
 
@@ -94,22 +106,19 @@ static void self_show_consumers(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 
 	mbb_lock_reader_lock();
 
+	on_final { mbb_lock_reader_unlock(); re_free(re); }
+
 	user = mbb_user_get_by_id(mbb_thread_get_uid());
-	if (user == NULL) final {
-		mbb_lock_reader_unlock();
-		re_free(re);
-
+	if (user == NULL) final
 		*ans = mbb_xml_msg(MBB_MSG_SELF_NOT_EXISTS);
+
+	ad.tag = *ans = mbb_xml_msg_ok();
+	user_show_consumers(user, re, &ad);
+
+	final {
+		if (mbb_session_is_http())
+			xml_tag_sort_by_attr(*ans, "consumer", "name");
 	}
-
-	*ans = mbb_xml_msg_ok();
-	user_show_consumers(user, re, *ans);
-
-	mbb_lock_reader_unlock();
-	re_free(re);
-
-	if (mbb_session_is_http())
-		xml_tag_sort_by_attr(*ans, "consumer", "name");
 }
 
 static void add_consumer(XmlTag *tag, XmlTag **ans)
