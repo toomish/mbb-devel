@@ -41,7 +41,7 @@ _pg_config(libdir PGSQL_LIBRARY_DIRS)
 
 link_directories (${PGSQL_LIBRARY_DIRS})
 
-configure_file (config/mbbrc.in config/mbbrc)
+configure_file (config/mbbrc.in ${CMAKE_CURRENT_BINARY_DIR}/config/mbbrc)
 
 file (GLOB mbbd_sources *.c)
 

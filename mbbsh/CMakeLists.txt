@@ -8,7 +8,7 @@ if (NOT READLINE_FOUND)
 	message (FATAL_ERROR "readline not found")
 endif ()
 
-set (MBBSH_LUA_DIR share/mbb)
+set (MBBSH_LUA_DIR share/mbb/lua)
 
 include_directories (${LUA_INCLUDE_DIR} ${READLINE_INCLUDE_DIR})
 
