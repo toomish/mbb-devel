@@ -73,7 +73,7 @@ static void load_modules(GSList *list)
 	}
 }
 
-int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
+int main(int argc, char *argv[])
 {
 	GOptionContext *context;
 	GError *error = NULL;

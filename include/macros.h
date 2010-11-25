@@ -14,7 +14,12 @@
 #define exec_if(expr, cond) if (cond) expr
 
 #define __init __attribute__ ((constructor))
-#define __sentinel(n) __attribute__ ((sentinel(n)))
+
+#if __GNUC__ >= 4
+	#define __sentinel(n) __attribute__ ((sentinel(n)))
+#else
+	#define __sentinel(n)
+#endif
 
 #ifndef __nonnull
 #define __nonnull(arg) __attribute__ ((nonnull(arg)))

@@ -57,7 +57,6 @@ static struct data_link_entry dl_entries[] = {
 };
 
 static DataLink *dlink = NULL;
-static GHashTable *sym_ht = NULL;
 
 static gchar *module_dir__ = NULL;
 
@@ -77,13 +76,6 @@ static inline void dlink_init(void)
 {
 	dlink = data_link_new_full(
 		dl_entries, NELEM(dl_entries), (GDestroyNotify) mbb_module_free
-	);
-}
-
-static inline void sym_ht_init(void)
-{
-	sym_ht = g_hash_table_new_full(
-		g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) g_free
 	);
 }
 
