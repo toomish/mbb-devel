@@ -1,3 +1,6 @@
+/* Copyright (C) 2010 Mikhail Osipov <mike.osipov@gmail.com> */
+/* Published under the GNU General Public License V.2, see file COPYING */
+
 #include "mbbsettings.h"
 #include "mbbvar.h"
 #include "trash.h"

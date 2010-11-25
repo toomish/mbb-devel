@@ -1,3 +1,6 @@
+/* Copyright (C) 2010 Mikhail Osipov <mike.osipov@gmail.com> */
+/* Published under the GNU General Public License V.2, see file COPYING */
+
 #ifndef MIKE_WAS_HERE_MAP_H
 #define MIKE_WAS_HERE_MAP_H
 
