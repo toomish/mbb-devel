@@ -227,7 +227,7 @@ static gpointer mbb_thread_client(struct thread_param *tp)
 		http ? "http" : "xml", te.ss.peer, te.ss.port
 	);
 
-	if (!http)
+	if (! http)
 		mbb_thread_xml_client(&te);
 	else
 		mbb_thread_http_client(&te);

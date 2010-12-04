@@ -1,4 +1,4 @@
-set (MBB_MODULES attr auth_apache netflow)
+set (MBB_MODULES attr auth_apache stat netflow)
 
 set (MBB_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 

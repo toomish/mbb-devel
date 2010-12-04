@@ -7,6 +7,8 @@
 #include "mbblog.h"
 #include "mbbvar.h"
 
+#include "macros.h"
+
 #include "attr/interface.h"
 
 #include <apr_md5.h>
@@ -84,16 +86,12 @@ MBB_VAR_DEF(var_def) {
 
 static void load_module(void)
 {
-	if ((attr_lib = mbb_module_import("attr.so")) == NULL) {
+	if ((attr_lib = mbb_module_import("attr.so")) == NULL) final
 		mbb_log_self("import module attr.so failed");
-		return;
-	}
 
 	auth_method_key = mbb_auth_method_register("apache", auth_apache);
-	if (auth_method_key == NULL) {
+	if (auth_method_key == NULL) final
 		mbb_log_self("failed to register auth method");
-		return;
-	}
 
 	mbb_module_add_base_var("auth.apache.strict", &var_def, &auth_strict);
 }

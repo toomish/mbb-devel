@@ -7,19 +7,10 @@
 #include <glib.h>
 #include <time.h>
 
+#include "entry.h"
 #include "inet.h"
 
 struct mbb_stat_pool;
-
-struct mbb_stat_entry {
-	guint unit_id;
-	guint link_id;
-
-	guint64 nbyte_in;
-	guint64 nbyte_out;
-
-	time_t point;
-};
 
 struct mbb_stat_pool *mbb_stat_pool_new(void);
 gboolean mbb_stat_pool_init(void);

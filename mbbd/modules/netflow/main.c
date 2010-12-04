@@ -17,6 +17,8 @@
 #include "unitstat.h"
 #include "calcstat.h"
 
+gpointer *stat_lib = NULL;
+
 static struct mbb_var *nf_data_var = NULL;
 static struct mbb_var *nf_store_var = NULL;
 
@@ -103,6 +105,9 @@ static void load_module(void)
 		.op_new = g_ptr_vardup,
 		.op_free = g_ptr_strfree
 	};
+
+	if ((stat_lib = mbb_module_import("stat.so")) == NULL) final
+		mbb_log_self("import module stat.so failed");
 
 	nf_store_dir__ = g_strdup("/tmp/");
 

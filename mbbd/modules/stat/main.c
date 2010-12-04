@@ -1,6 +1,8 @@
 /* Copyright (C) 2010 Mikhail Osipov <mike.osipov@gmail.com> */
 /* Published under the GNU General Public License V.2, see file COPYING */
 
+#include "mbbmodule.h"
+
 #include "mbbxmlmsg.h"
 #include "mbbthread.h"
 #include "mbbstat.h"
@@ -18,6 +20,8 @@
 
 #include <stdarg.h>
 #include <string.h>
+
+#include "interface.h"
 
 struct stat_opt {
 	guint32 block_size;
@@ -202,9 +206,8 @@ static inline void drop_view_dates(void)
 	mbb_db_query("drop view dates;", NULL, NULL, NULL);
 }
 
-gboolean mbb_statman_time_args_parse(time_t *start, time_t *end,
-				     gchar *period, gchar *step,
-				     XmlTag **ans)
+gboolean parse_time_args(time_t *start, time_t *end, gchar *period, gchar *step,
+			 XmlTag **ans)
 {
 	static gchar *step_name[] = { "hour", "day", "month", "year" };
 
@@ -345,7 +348,7 @@ static void stat_common(XmlTag *tag, XmlTag **ans, struct sqi *sqi)
 	end = VAR_CONV_TIME_UNSET;
 	MBB_XTV_CALL(&start, &end, &period, &so.step);
 
-	if (! mbb_statman_time_args_parse(&start, &end, period, so.step, ans))
+	if (! parse_time_args(&start, &end, period, so.step, ans))
 		return;
 
 	if (stat_opt_parse(&so, tag, ans) == FALSE)
@@ -441,7 +444,7 @@ static void stat_wipe(XmlTag *tag, XmlTag **ans)
 	end = VAR_CONV_TIME_UNSET;
 	MBB_XTV_CALL(&start, &end, &period);
 
-	if (! mbb_statman_time_args_parse(&start, &end, period, NULL, ans))
+	if (! parse_time_args(&start, &end, period, NULL, ans))
 		return;
 
 	if (! mbb_stat_db_wipe(start, end, &error))
@@ -458,19 +461,34 @@ MBB_FUNC_REGISTER_STRUCT("mbb-stat-wipe", stat_wipe, MBB_CAP_WHEEL);
 MBB_FUNC_REGISTER_STRUCT("mbb-self-stat-unit", self_stat_unit, MBB_CAP_CONS);
 MBB_FUNC_REGISTER_STRUCT("mbb-self-stat-consumer", self_stat_consumer, MBB_CAP_CONS);
 
-static void __init init(void)
+static void load_module(void)
 {
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(stat_unit),
-		MBB_INIT_FUNC_STRUCT(stat_consumer),
-		MBB_INIT_FUNC_STRUCT(stat_operator),
-		MBB_INIT_FUNC_STRUCT(stat_link),
-		MBB_INIT_FUNC_STRUCT(stat_gateway),
-		MBB_INIT_FUNC_STRUCT(stat_wipe),
-		MBB_INIT_FUNC_STRUCT(self_stat_unit),
-		MBB_INIT_FUNC_STRUCT(self_stat_consumer)
+	static struct stat_interface si = {
+		.pool_init = mbb_stat_pool_init,
+
+		.pool_new = mbb_stat_pool_new,
+		.pool_feed = mbb_stat_feed,
+		.pool_save = mbb_stat_pool_save,
+		.pool_free = mbb_stat_pool_free,
+
+		.db_wipe = mbb_stat_db_wipe,
+		.parse_tag = parse_time_args
 	};
 
-	mbb_init_pushv(entries, NELEM(entries));
+	mbb_module_export(&si);
+
+	mbb_module_add_func(&MBB_FUNC(stat_unit));
+	mbb_module_add_func(&MBB_FUNC(stat_consumer));
+	mbb_module_add_func(&MBB_FUNC(stat_operator));
+	mbb_module_add_func(&MBB_FUNC(stat_link));
+	mbb_module_add_func(&MBB_FUNC(stat_gateway));
+	mbb_module_add_func(&MBB_FUNC(stat_wipe));
+	mbb_module_add_func(&MBB_FUNC(self_stat_unit));
+	mbb_module_add_func(&MBB_FUNC(self_stat_consumer));
 }
 
+static void unload_module(void)
+{
+}
+
+MBB_DEFINE_MODULE("stat methods")

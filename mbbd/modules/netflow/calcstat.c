@@ -6,23 +6,25 @@
 #include "pathtree.h"
 #include "flow.h"
 
-#include "mbbstatman.h"
 #include "mbbinetmap.h"
 #include "mbbgateway.h"
 #include "mbbxmlmsg.h"
 #include "mbbgwlink.h"
 #include "mbbunit.h"
-#include "mbbstat.h"
 #include "mbbtask.h"
 #include "mbblock.h"
 #include "mbbxtv.h"
 #include "mbblog.h"
+
+#include "stat/interface.h"
 
 #include "macros.h"
 
 #define PLAIN_STAT_TASK (plain_stat_quark())
 #define UPDATE_STAT_TASK (update_stat_quark())
 #define FEED_STAT_TASK (feed_stat_quark())
+
+extern struct stat_interface *stat_lib;
 
 GString *nf_get_data_dir(void);
 
@@ -75,7 +77,7 @@ static struct mbb_task_hook feed_stat_hook = {
 static void base_task_free(struct base_task_data *td)
 {
 	if (td->pool != NULL)
-		mbb_stat_pool_free(td->pool);
+		stat_lib->pool_free(td->pool);
 
 	if (td->flow != NULL)
 		flow_stream_close(td->flow);
@@ -96,7 +98,7 @@ static gboolean path_tree_open_next(struct base_task_data *td)
 	td->flow = flow_stream_new(fname, 0, &error);
 	if (td->flow != NULL) {
 		mbb_log("open %s", fname);
-		td->pool = mbb_stat_pool_new();
+		td->pool = stat_lib->pool_new();
 	} else {
 		mbb_log("failed to open netflow file %s: %s",
 			fname, error->message);
@@ -147,7 +149,7 @@ static gboolean process_flow_data(struct flow_data *fd, MbbUMap *umap,
 			entry.nbyte_in = 0;
 			entry.nbyte_out = fd->nbytes;
 
-			mbb_stat_feed(pool, &entry);
+			stat_lib->pool_feed(pool, &entry);
 		}
 	}
 
@@ -159,7 +161,7 @@ static gboolean process_flow_data(struct flow_data *fd, MbbUMap *umap,
 			entry.nbyte_in = fd->nbytes;
 			entry.nbyte_out = 0;
 
-			mbb_stat_feed(pool, &entry);
+			stat_lib->pool_feed(pool, &entry);
 		}
 	}
 
@@ -171,7 +173,7 @@ static gboolean update_task_init(struct base_task_data *td)
 	struct update_task_data *utd = (gpointer) td;
 	GError *error = NULL;
 
-	if (! mbb_stat_db_wipe(utd->start, utd->end, &error)) {
+	if (! stat_lib->db_wipe(utd->start, utd->end, &error)) {
 		mbb_log("mbb_stat_db_wipe failed: %s", error->message);
 		g_error_free(error);
 		return FALSE;
@@ -182,7 +184,7 @@ static gboolean update_task_init(struct base_task_data *td)
 
 static gboolean base_task_init(struct base_task_data *td)
 {
-	if (! mbb_stat_pool_init())
+	if (! stat_lib->pool_init())
 		return FALSE;
 
 	if (td->op_init != NULL)
@@ -226,7 +228,7 @@ static gboolean base_task_work(struct base_task_data *td)
 		flow_stream_close(td->flow);
 		td->flow = NULL;
 
-		mbb_stat_pool_save(td->pool);
+		stat_lib->pool_save(td->pool);
 		td->pool = NULL;
 	}
 
@@ -357,7 +359,7 @@ void update_stat(XmlTag *tag, XmlTag **ans)
 	end = VAR_CONV_TIME_UNSET;
 	MBB_XTV_CALL(&start, &end, &period);
 
-	if (! mbb_statman_time_args_parse(&start, &end, period, NULL, ans))
+	if (! stat_lib->parse_tag(&start, &end, period, NULL, ans))
 		return;
 
 	if (get_glob_list(tag, &list, ans) == FALSE)
@@ -385,10 +387,10 @@ static GQuark feed_stat_quark(void)
 
 static gboolean feed_stat_init(struct feed_task_data *td)
 {
-	if (! mbb_stat_pool_init())
+	if (! stat_lib->pool_init())
 		return FALSE;
 
-	td->pool = mbb_stat_pool_new();
+	td->pool = stat_lib->pool_new();
 
 	return TRUE;
 }
@@ -400,7 +402,7 @@ static gboolean feed_stat_work(struct feed_task_data *td)
 	if (flow_stream_read(td->flow, &fd))
 		process_flow_data(&fd, td->umap, td->pool);
 	else {
-		mbb_stat_pool_save(td->pool);
+		stat_lib->pool_save(td->pool);
 		td->pool = NULL;
 
 		return FALSE;
@@ -412,7 +414,7 @@ static gboolean feed_stat_work(struct feed_task_data *td)
 static void feed_stat_free(struct feed_task_data *td)
 {
 	if (td->pool != NULL)
-		mbb_stat_pool_free(td->pool);
+		stat_lib->pool_free(td->pool);
 
 	flow_stream_close(td->flow);
 	mbb_umap_free(td->umap);
