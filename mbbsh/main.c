@@ -859,7 +859,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 		errx(1, "--follow option only for non term input");
 
 	if (opt_nosh && opt_file == NULL)
-		errx(1, "--nosh option only with --file option");
+		errx(1, "--nosh option only with --load option");
 
 	if (opt_serv == NULL)
 		errx(1, "serv option missed");
