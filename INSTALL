@@ -1,0 +1,38 @@
+1. Requirements
+
+	postgresql >= 8.0
+	glib2 >= 2.16
+	GNU readline
+	lua >= 5.1
+	flow-tools (http://www.splintered.net/sw/flow-tools/)
+
+2. Build
+
+	mkdir $BUILD_DIR
+	cd $BUILD_DIR
+	cmake $SOURCE_DIR -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+	make
+	make install
+
+3. Configuration
+
+	create database:
+		createdb $DBNAME -O $USER
+		createlang plpgsql $DBNAME
+	initialize database:
+		cd $INSTALL_PREFIX/share/mbb/sql/
+		psql $DBNAME -f table.sql
+		psql $DBNAME -f func.sql
+		psql $DBNAME -f attr_install.sql
+	change vars in [db] section in config ($INSTALL_PREFIX/etc/mbb/mbbrc)
+
+4. Run
+
+	server:
+		mbbd
+	client:
+		mbbsh --host $addr --serv $port
+		-- or --
+		export MBB_HOST=$addr:$port
+		mbbsh
+
