@@ -109,14 +109,13 @@ create table gwlinks (
 
 create table unit_stat (
 	unit_id integer references units not null,
-	gwlink_id integer references gwlinks not null,
 
 	nbyte_in bigint not null,
 	nbyte_out bigint not null,
 
 	point bigint not null,
 
-	unique (unit_id, gwlink_id, point)
+	unique (unit_id, point)
 );
 
 create index unit_stat_unit_id_index on unit_stat (unit_id);
@@ -135,4 +134,16 @@ create table link_stat (
 
 create index link_stat_gwlink_id_index on link_stat (gwlink_id);
 create index link_stat_hour_no_index on link_stat (point);
+
+create table unit_link_stat (
+	unit_id integer references units not null,
+	gwlink_id integer references gwlinks not null,
+
+	nbyte_in bigint not null,
+	nbyte_out bigint not null,
+
+	point bigint not null,
+
+	unique (unit_id, gwlink_id, point)
+);
 

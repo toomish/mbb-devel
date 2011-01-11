@@ -11,63 +11,69 @@
 #include "varconv.h"
 #include "query.h"
 
-struct urec_key {
-	guint unit_id;
-	guint link_id;
-	time_t point;
-};
+#include "macros.h"
 
-struct urec {
-	struct urec_key key;
+#include <string.h>
+
+struct stat_rec {
 	guint64 nbyte_in;
 	guint64 nbyte_out;
-
+	gchar key[];
 };
 
-struct lrec_key {
-	guint link_id;
+#define STAT_REC_KEY(r) ((gpointer) r->key)
+
+struct double_key {
 	time_t point;
+	guint aid;
+	guint bid;
 };
 
-struct lrec {
-	struct lrec_key key;
-	guint64 nbyte_in;
-	guint64 nbyte_out;
+struct single_key {
+	time_t point;
+	guint id;
+};
+
+union key {
+	time_t point;
+	struct double_key dkey;
+	struct single_key skey;
 };
 
 struct mbb_stat_pool {
 	GHashTable *ustat;
 	GHashTable *lstat;
+	GHashTable *ulstat;
 };
 
-static gboolean urec_key_equal(struct urec_key *a, struct urec_key *b)
+static gboolean double_key_equal(struct double_key *a, struct double_key *b)
 {
-	if (a->unit_id != b->unit_id)
+	if (a->aid != b->aid)
 		return FALSE;
-	if (a->link_id != b->link_id)
+	if (a->bid != b->bid)
 		return FALSE;
 	if (a->point != b->point)
 		return FALSE;
 	return TRUE;
 }
 
-static guint urec_key_hash(struct urec_key *key)
+static guint double_key_hash(struct double_key *key)
 {
-	return (key->unit_id | (key->link_id << 20)) ^ key->point;
+	return (key->aid | (key->bid << 20)) ^ key->point;
 }
 
-static gboolean lrec_key_equal(struct lrec_key *a, struct lrec_key *b)
+static gboolean single_key_equal(struct single_key *a, struct single_key *b)
 {
-	if (a->link_id != b->link_id)
+	if (a->id != b->id)
 		return FALSE;
 	if (a->point != b->point)
 		return FALSE;
 	return TRUE;
 }
 
-static guint lrec_key_hash(struct lrec_key *key)
+static guint single_key_hash(struct single_key *key)
 {
-	return (key->link_id << 10) | key->point;
+	return (key->id << 10) | key->point;
 }
 
 struct mbb_stat_pool *mbb_stat_pool_new(void)
@@ -76,11 +82,15 @@ struct mbb_stat_pool *mbb_stat_pool_new(void)
 
 	pool = g_new(struct mbb_stat_pool, 1);
 	pool->ustat = g_hash_table_new_full(
-		(GHashFunc) urec_key_hash, (GEqualFunc) urec_key_equal,
+		(GHashFunc) single_key_hash, (GEqualFunc) single_key_equal,
 		NULL, g_free
 	);
 	pool->lstat = g_hash_table_new_full(
-		(GHashFunc) lrec_key_hash, (GEqualFunc) lrec_key_equal,
+		(GHashFunc) single_key_hash, (GEqualFunc) single_key_equal,
+		NULL, g_free
+	);
+	pool->ulstat = g_hash_table_new_full(
+		(GHashFunc) double_key_hash, (GEqualFunc) double_key_equal,
 		NULL, g_free
 	);
 
@@ -91,83 +101,53 @@ void mbb_stat_pool_free(struct mbb_stat_pool *pool)
 {
 	g_hash_table_destroy(pool->ustat);
 	g_hash_table_destroy(pool->lstat);
+	g_hash_table_destroy(pool->ulstat);
 	g_free(pool);
 }
 
-static void urec_update(struct mbb_stat_pool *pool,
-			struct mbb_stat_entry *entry)
+static void rec_update(GHashTable *ht, gpointer key, gsize key_size,
+		       struct stat_rec *data)
 {
-	struct urec_key key;
-	struct urec *rec;
+	struct stat_rec *rec;
 
-	key.unit_id = entry->unit_id;
-	key.link_id = entry->link_id;
-	key.point = entry->point;
-
-	rec = g_hash_table_lookup(pool->ustat, &key);
-	if (rec != NULL) {
-		rec->nbyte_in += entry->nbyte_in;
-		rec->nbyte_out += entry->nbyte_out;
-	} else {
-		rec = g_new(struct urec, 1);
-
-		rec->key = key;
-		rec->nbyte_in = entry->nbyte_in;
-		rec->nbyte_out = entry->nbyte_out;
-
-		g_hash_table_insert(pool->ustat, &rec->key, rec);
+	rec = g_hash_table_lookup(ht, key);
+	if (rec == NULL) {
+		rec = g_malloc0(sizeof(struct stat_rec) + key_size);
+		memcpy(STAT_REC_KEY(rec), key, key_size);
+		g_hash_table_insert(ht, STAT_REC_KEY(rec), rec);
 	}
-}
 
-static void lrec_update(struct mbb_stat_pool *pool,
-			struct mbb_stat_entry *entry)
-{
-	struct lrec_key key;
-	struct lrec *rec;
-
-	key.link_id = entry->link_id;
-	key.point = entry->point;
-
-	rec = g_hash_table_lookup(pool->lstat, &key);
-	if (rec != NULL) {
-		rec->nbyte_in += entry->nbyte_in;
-		rec->nbyte_out += entry->nbyte_out;
-	} else {
-		rec = g_new(struct lrec, 1);
-
-		rec->key = key;
-		rec->nbyte_in = entry->nbyte_in;
-		rec->nbyte_out = entry->nbyte_out;
-
-		g_hash_table_insert(pool->lstat, &rec->key, rec);
-	}
+	rec->nbyte_in += data->nbyte_in;
+	rec->nbyte_out += data->nbyte_out;
 }
 
 void mbb_stat_feed(struct mbb_stat_pool *pool, struct mbb_stat_entry *entry)
 {
-	time_t tmp = entry->point;
+	struct stat_rec rec;
+	union key key;
 
-	entry->point = mbb_stat_extract_hour(tmp);
+	rec.nbyte_in = entry->nbyte_in;
+	rec.nbyte_out = entry->nbyte_out;
 
-	urec_update(pool, entry);
-	lrec_update(pool, entry);
+	key.point = mbb_stat_extract_hour(entry->point);
 
-	entry->point = tmp;
+	key.skey.id = entry->unit_id;
+	rec_update(pool->ustat, &key, sizeof(struct single_key), &rec);
+
+	key.skey.id = entry->link_id;
+	rec_update(pool->lstat, &key, sizeof(struct single_key), &rec);
+
+	key.dkey.aid = entry->unit_id;
+	key.dkey.bid = entry->link_id;
+	rec_update(pool->ulstat, &key, sizeof(struct double_key), &rec);
 }
 
-static gboolean urec_save(struct urec *rec)
+static inline gboolean rec_save_query(gchar *query, const gchar *func)
 {
-	struct urec_key *key = &rec->key;
 	GError *error = NULL;
-	gchar *query;
-
-	query = query_function("update_unit_stat", "ddqqt",
-		key->unit_id, key->link_id, rec->nbyte_in, rec->nbyte_out,
-		key->point
-	);
 
 	if (! mbb_db_query(query, NULL, NULL, &error)) {
-		mbb_log("urec_save: %s", error->message);
+		mbb_log("%s: %s", func, error->message);
 		g_error_free(error);
 		return FALSE;
 	}
@@ -175,23 +155,40 @@ static gboolean urec_save(struct urec *rec)
 	return TRUE;
 }
 
-static gboolean lrec_save(struct lrec *rec)
+static gboolean unit_link_rec_save(struct stat_rec *rec)
 {
-	struct lrec_key *key = &rec->key;
-	GError *error = NULL;
+	struct double_key *key = STAT_REC_KEY(rec);
+	gchar *query;
+
+	query = query_function("update_unit_link_stat", "ddqqt",
+		key->aid, key->bid, rec->nbyte_in, rec->nbyte_out, key->point
+	);
+
+	return rec_save_query(query, __FUNCTION__);
+}
+
+static gboolean unit_rec_save(struct stat_rec *rec)
+{
+	struct single_key *key = STAT_REC_KEY(rec);
+	gchar *query;
+
+	query = query_function("update_unit_stat", "dqqt",
+		key->id, rec->nbyte_in, rec->nbyte_out, key->point
+	);
+
+	return rec_save_query(query, __FUNCTION__);
+}
+
+static gboolean link_rec_save(struct stat_rec *rec)
+{
+	struct single_key *key = STAT_REC_KEY(rec);
 	gchar *query;
 
 	query = query_function("update_link_stat", "dqqt",
-		key->link_id, rec->nbyte_in, rec->nbyte_out, key->point
+		key->id, rec->nbyte_in, rec->nbyte_out, key->point
 	);
 
-	if (! mbb_db_query(query, NULL, NULL, &error)) {
-		mbb_log("lrec_save: %s", error->message);
-		g_error_free(error);
-		return FALSE;
-	}
-
-	return TRUE;
+	return rec_save_query(query, __FUNCTION__);
 }
 
 gboolean mbb_stat_pool_init(void)
@@ -240,20 +237,32 @@ static inline void db_commit(void)
 	}
 }
 
+static gboolean save_records(GHashTable *ht, gboolean (*save)(struct stat_rec *))
+{
+	struct stat_rec *rec;
+	GHashTableIter iter;
+
+	g_hash_table_iter_init(&iter, ht);
+	while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rec)) {
+		if (! mbb_task_poll_state() || ! save(rec))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
 void mbb_stat_pool_save(struct mbb_stat_pool *pool)
 {
 	static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 
-	GHashTableIter iter;
 	mbb_log_lvl_t mask;
-	gpointer rec;
+
+	mbb_log_mask(LOG_MASK_DEL, MBB_LOG_QUERY, &mask);
 
 	if (! g_static_mutex_trylock(&mutex)) {
 		mbb_log("wait for mutex");
 		g_static_mutex_lock(&mutex);
 	}
-
-	mbb_log_mask(LOG_MASK_DEL, MBB_LOG_QUERY, &mask);
 
 	if (! mbb_task_poll_state())
 		goto out;
@@ -263,24 +272,20 @@ void mbb_stat_pool_save(struct mbb_stat_pool *pool)
 	if (! db_begin())
 		goto out;
 
-	g_hash_table_iter_init(&iter, pool->ustat);
-	while (g_hash_table_iter_next(&iter, NULL, &rec)) {
-		if (! mbb_task_poll_state() || ! urec_save(rec)) {
-			db_rollback();
-			goto out;
-		}
-	}
+	if (! save_records(pool->ustat, unit_rec_save))
+		goto rollback;
 
-	g_hash_table_iter_init(&iter, pool->lstat);
-	while (g_hash_table_iter_next(&iter, NULL, &rec)) {
-		if (! mbb_task_poll_state() || ! lrec_save(rec)) {
-			db_rollback();
-			goto out;
-		}
-	}
+	if (! save_records(pool->lstat, link_rec_save))
+		goto rollback;
+
+	if (! save_records(pool->ulstat, unit_link_rec_save))
+		goto rollback;
 
 	db_commit();
+	goto out;
 
+rollback:
+	db_rollback();
 out:
 	mbb_log_mask(LOG_MASK_SET, mask, NULL);
 	g_static_mutex_unlock(&mutex);
@@ -300,17 +305,16 @@ static gboolean stat_table_clean(gchar *table, time_t start, time_t end,
 
 gboolean mbb_stat_db_wipe(time_t start, time_t end, GError **error)
 {
+	gchar *tables[] = { "unit_stat", "link_stat", "unit_link_stat" };
+
 	if (! mbb_db_begin(error))
 		return FALSE;
 
-	if (! stat_table_clean("unit_stat", start, end, error)) {
-		mbb_db_rollback(NULL);
-		return FALSE;
-	}
-
-	if (! stat_table_clean("link_stat", start, end, error)) {
-		mbb_db_rollback(NULL);
-		return FALSE;
+	for (guint n = 0; n < NELEM(tables); n++) {
+		if (! stat_table_clean(tables[n], start, end, error)) {
+			mbb_db_rollback(NULL);
+			return FALSE;
+		}
 	}
 
 	mbb_db_commit(NULL);
