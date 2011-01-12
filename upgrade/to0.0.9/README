@@ -1,0 +1,8 @@
+as postgres super user:
+> createlang plpythonu $dbname
+> psql $options -c "update pg_language set lanpltrusted = true where lanname = 'plpythonu';"
+
+as normal user:
+psql $options -f func.sql
+psql $options -f script.sql
+
