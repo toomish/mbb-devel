@@ -147,3 +147,6 @@ create table unit_link_stat (
 	unique (unit_id, gwlink_id, point)
 );
 
+create index unit_link_stat_unit_id_index on unit_link_stat (unit_id);
+create index unit_link_stat_hour_no_index on unit_link_stat (point);
+

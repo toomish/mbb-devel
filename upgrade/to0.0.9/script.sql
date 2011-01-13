@@ -69,8 +69,8 @@ set enable_seqscan to false;
 select migrate('unit_stat', 'temp_stat');
 drop function migrate (text, text);
 
-drop index unit_stat_unit_id_index;
-drop index unit_stat_hour_no_index;
+alter index unit_stat_unit_id_index rename to unit_link_stat_unit_id_index;
+alter index unit_stat_hour_no_index rename to unit_link_stat_hour_no_index;
 
 alter table unit_stat rename to unit_link_stat;
 alter table temp_stat rename to unit_stat;
