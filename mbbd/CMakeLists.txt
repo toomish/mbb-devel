@@ -50,7 +50,7 @@ set_source_files_properties (signaller.c COMPILE_FLAGS -D_GNU_SOURCE)
 set_source_files_properties (psql.c COMPILE_FLAGS -I${PGSQL_INCLUDE_DIRS})
 
 add_executable (mbbd ${mbbd_sources})
-target_link_libraries (mbbd mbbutil pq ${MBB_LIBRARIES})
+target_link_libraries (mbbd mbbutil pq dl ${MBB_LIBRARIES})
 
 install (TARGETS mbbd DESTINATION bin)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/config/mbbrc DESTINATION ${MBBD_CONF_DIR})

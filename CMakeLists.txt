@@ -18,7 +18,7 @@ add_definitions (-Wall -Wextra -Werror -pedantic -std=c99 -D_POSIX_SOURCE)
 include_directories (include ${GLIB_INCLUDE_DIRS} ${GTHREAD_INCLUDE_DIRS})
 link_directories (${GLIB_LIBRARY_DIRS} ${GTHREAD_LIBRARY_DIRS})
 
-set (MBB_LIBRARIES ${GLIB_LIBRARIES} ${GTHREAD_LIBRARIES})
+set (MBB_LIBRARIES pthread ${GLIB_LIBRARIES} ${GTHREAD_LIBRARIES})
 
 add_subdirectory (lib)
 add_subdirectory (mbbd)

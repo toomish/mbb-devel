@@ -232,9 +232,7 @@ gchar *query_insert_full(gchar *table, gchar *fmt, ...)
 	struct vararg va;
 	GString *buf;
 	gchar *arg;
-	gchar *p;
 
-	p = fmt;
 	buf = getbuf();
 
 	g_string_printf(buf, "insert into %s ", table);
