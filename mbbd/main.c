@@ -53,6 +53,10 @@ static void init_signals(void)
 	struct sigaction act;
 
 	memset(&act, 0, sizeof(act));
+	act.sa_handler = SIG_IGN;
+	if (sigaction(SIGPIPE, &act, NULL) < 0)
+		err_sys("sigaction");
+
 	act.sa_handler = sighandler;
 	if (sigaction(SIGUSR1, &act, NULL) < 0)
 		err_sys("sigaction");
