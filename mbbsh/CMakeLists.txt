@@ -16,6 +16,7 @@ file (GLOB mbbsh_sources *.c)
 
 add_definitions (-DDEFAULT_LUA_DIR=\"${CMAKE_INSTALL_PREFIX}/${MBBSH_LUA_DIR}\")
 set_source_files_properties (luaenv.c COMPILE_FLAGS -D_BSD_SOURCE)
+set_source_files_properties (nettalker.c COMPILE_FLAGS -D_GNU_SOURCE)
 
 add_executable (mbbsh ${mbbsh_sources})
 target_link_libraries (mbbsh mbbutil

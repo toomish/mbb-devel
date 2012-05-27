@@ -5,6 +5,8 @@
 #include "debug.h"
 #include "net.h"
 
+#include <pthread.h>
+#include <signal.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -19,7 +21,8 @@ struct talk_handler {
 static gint sock_fd = -1;
 static GStaticMutex thread_mutex = G_STATIC_MUTEX_INIT;
 static GThread *thread;
-GSList *handler_list = NULL;
+static pthread_t main_thread;
+static GSList *handler_list = NULL;
 
 static gpointer talk_thread(gpointer arg);
 
@@ -55,6 +58,8 @@ gboolean talk_init(gchar *host, gchar *service)
 		close(sock_fd);
 		return FALSE;
 	}
+
+	main_thread = pthread_self();
 
 	thread = g_thread_create(talk_thread, NULL, TRUE, NULL);
 	if (thread == NULL) {
@@ -114,6 +119,10 @@ static gpointer talk_thread(gpointer arg G_GNUC_UNUSED)
 	}
 
 	xml_parser_free(parser);
+
+	if (thread != NULL)
+		pthread_kill(main_thread, SIGUSR1);
+
 	return NULL;
 }
 
@@ -121,6 +130,8 @@ void talk_fini(void)
 {
 	if (thread == NULL)
 		err_quit("talk is already finalized");
+
+	thread = NULL;
 
 	close(sock_fd);
 

@@ -767,6 +767,11 @@ static void sigint_handler(int signo)
 		caught_sigint = TRUE;
 }
 
+static void talk_failed(int signo G_GNUC_UNUSED)
+{
+	errx(1, "server died");
+}
+
 static void init_signals(gboolean catch_int)
 {
 	struct sigaction act;
@@ -774,6 +779,10 @@ static void init_signals(gboolean catch_int)
 	memset(&act, 0, sizeof(act));
 	act.sa_handler = SIG_IGN;
 	if (sigaction(SIGPIPE, &act, NULL) < 0)
+		err_sys("sigaction");
+
+	act.sa_handler = talk_failed;
+	if (sigaction(SIGUSR1, &act, NULL) < 0)
 		err_sys("sigaction");
 
 	if (catch_int) {

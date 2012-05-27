@@ -152,3 +152,6 @@ OK 54. unit map sync - rebuild local map and add to main
 	group add method name method
 	group del method name method
 	group show methods
+58. save calculated netflow files to separate file
+59. mbbd internal logging to file
+60. auto map rebuild before calculating
