@@ -425,7 +425,7 @@ gboolean mbb_module_load(gchar *name, GError **error)
 	g_free(path);
 	if (handle == NULL) {
 		g_set_error(error,
-			MBB_MODULE_ERROR, MBB_MODULE_ERROR_OPEN, dlerror());
+			MBB_MODULE_ERROR, MBB_MODULE_ERROR_OPEN, "%s", dlerror());
 		mbb_plock_writer_unlock();
 		return FALSE;
 	}
