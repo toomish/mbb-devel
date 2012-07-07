@@ -23,5 +23,6 @@ void talk_say_stdv(gchar *fmt, ...) G_GNUC_PRINTF(1, 2);
 XmlTag *talk_half_say(gchar *msg);
 
 void log_handler(XmlTag *tag);
+void kill_handler(XmlTag *tag);
 
 #endif

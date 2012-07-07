@@ -203,31 +203,28 @@ struct mbb_session *current_session(void)
 static gpointer mbb_thread_client(struct thread_param *tp)
 {
 	struct thread_env te;
-	gchar buf[INET_ADDR_MAXSTRLEN];
-	gboolean http;
+	gchar peer[INET_ADDR_MAXSTRLEN];
+	guint port;
 
-	http = tp->http;
 	te.sock = tp->sock;
 	g_static_mutex_unlock(&tp->mutex);
 
-	te.ss.user = NULL;
-	te.ss.port = 0;
-	te.ss.peer = g_strdup(sock_get_peername(te.sock, buf, &te.ss.port));
-
-	te.ss.type = http ? MBB_SESSION_HTTP : MBB_SESSION_XML;
+	sock_get_peername(te.sock, peer, &port);
 
 	te.parser = NULL;
 	te.msg_queue = NULL;
 	te.signaller = NULL;
 
 	g_static_private_set(&thread_key, &te, NULL);
-	te.sid = mbb_session_new(&te.ss);
-
-	mbb_log("new %s session from %s:%d",
-		http ? "http" : "xml", te.ss.peer, te.ss.port
+	te.sid = mbb_session_new(
+		&te.ss, peer, port, tp->http ? MBB_SESSION_HTTP : MBB_SESSION_XML
 	);
 
-	if (! http)
+	mbb_log("new %s session from %s:%d",
+		tp->http ? "http" : "xml", te.ss.peer, te.ss.port
+	);
+
+	if (! tp->http)
 		mbb_thread_xml_client(&te);
 	else
 		mbb_thread_http_client(&te);
@@ -238,8 +235,6 @@ static gpointer mbb_thread_client(struct thread_param *tp)
 
 	if (te.parser != NULL)
 		xml_parser_free(te.parser);
-
-	g_free(te.ss.peer);
 
 	return NULL;
 }

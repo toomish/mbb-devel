@@ -55,7 +55,8 @@ typedef enum {
 	MBB_MSG_UNKNOWN_TASK,
 	MBB_MSG_TASK_CREATE_FAILED,
 	MBB_MSG_TIME_NOPARENT,
-	MBB_MSG_ROOT_ONLY
+	MBB_MSG_ROOT_ONLY,
+	MBB_MSG_UNKNOWN_SESSION
 } mbb_msg_t;
 
 XmlTag *mbb_xml_msg_ok(void);

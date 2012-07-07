@@ -769,7 +769,8 @@ static void sigint_handler(int signo)
 
 static void talk_failed(int signo G_GNUC_UNUSED)
 {
-	errx(1, "server died");
+	rl_cleanup_after_signal();
+	errx(1, "connection terminated");
 }
 
 static void init_signals(gboolean catch_int)
@@ -885,6 +886,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 	talk_register_handler("response", sync_handler);
 	talk_register_handler("auth", sync_handler);
 	talk_register_handler("log", log_handler);
+	talk_register_handler("kill", kill_handler);
 
 	if (talk_init((gchar *) opt_host, (gchar *) opt_serv) == FALSE)
 		errx(1, "talk failed");

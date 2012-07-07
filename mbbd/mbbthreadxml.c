@@ -7,15 +7,32 @@
 #include <poll.h>
 
 #include "mbbthread.h"
+#include "mbbplock.h"
 #include "mbbfunc.h"
 #include "mbbuser.h"
 #include "mbbauth.h"
-#include "mbblock.h"
 #include "mbblog.h"
 #include "mbbxtv.h"
 
 #include "macros.h"
 #include "debug.h"
+
+static GHashTable *ht = NULL;
+
+void mbb_thread_raise(guint tid)
+{
+	struct thread_env *te = NULL;
+
+	mbb_plock_reader_lock();
+
+	if (ht != NULL)
+		te = g_hash_table_lookup(ht, GINT_TO_POINTER(tid));
+
+	if (te != NULL)
+		signaller_raise(te->signaller);
+
+	mbb_plock_reader_unlock();
+}
 
 static void push_error_message(MbbMsgQueue *msg_queue, gchar *msg)
 {
@@ -26,6 +43,22 @@ static void push_error_message(MbbMsgQueue *msg_queue, gchar *msg)
 	);
 
 	mbb_msg_queue_push_alloc(msg_queue, output, strlen(output));
+}
+
+#define MSG_KILL "<kill/>"
+
+static void push_kill_message(MbbMsgQueue *msg_queue, gchar *msg)
+{
+	if (msg == NULL) {
+		mbb_log_lvl(MBB_LOG_XML, "send: %s", MSG_KILL);
+		mbb_msg_queue_push_const(msg_queue, MSG_KILL, STRSIZE(MSG_KILL));
+	} else {
+		gchar *output;
+
+		output = g_markup_printf_escaped("<kill msg='%s'/>", msg);
+		mbb_log_lvl(MBB_LOG_XML, "send: %s", output);
+		mbb_msg_queue_push_alloc(msg_queue, output, strlen(output));
+	}
 }
 
 #define MSG_AUTH_FAILED "<auth result='failed'/>"
@@ -144,6 +177,11 @@ static void xml_client_loop(struct thread_env *te)
 		if (send_only == FALSE)
 			pfd.events = POLLIN;
 
+		if (te->ss.killed && ! send_only) {
+			push_kill_message(te->msg_queue, te->ss.kill_msg);
+			send_only = TRUE;
+		}
+
 		if (! mbb_msg_queue_is_empty(te->msg_queue))
 			pfd.events |= POLLOUT;
 		else if (send_only)
@@ -162,6 +200,8 @@ static void xml_client_loop(struct thread_env *te)
 			continue;
 
 		if (pfd.revents & POLLIN) {
+			mbb_session_touch(&te->ss);
+
 			n = read(te->sock, buf, sizeof(buf));
 			if (n < 0) {
 				msg_err("read");
@@ -173,9 +213,7 @@ static void xml_client_loop(struct thread_env *te)
 				mbb_log("xml_parser: %s", error->message);
 				g_error_free(error);
 
-				push_error_message(te->msg_queue,
-					"invalid xml, kill yourself please"
-				);
+				push_error_message(te->msg_queue, "invalid xml");
 
 				send_only = TRUE;
 				continue;
@@ -209,7 +247,17 @@ void mbb_thread_xml_client(struct thread_env *te)
 	te->signaller = signaller_new(SIGUSR1);
 	signaller_block(te->signaller);
 
+	mbb_plock_writer_lock();
+	if (ht == NULL)
+		ht = g_hash_table_new(g_direct_hash, g_direct_equal);
+	g_hash_table_insert(ht, GINT_TO_POINTER(te->sid), te);
+	mbb_plock_writer_unlock();
+
 	xml_client_loop(te);
+
+	mbb_plock_writer_lock();
+	g_hash_table_remove(ht, GINT_TO_POINTER(te->sid));
+	mbb_plock_writer_unlock();
 
 	mbb_log_unregister();
 

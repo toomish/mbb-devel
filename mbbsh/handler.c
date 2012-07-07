@@ -104,6 +104,17 @@ void log_handler(XmlTag *tag)
 	g_string_free(string, TRUE);
 }
 
+void kill_handler(XmlTag *tag)
+{
+	Variant *var;
+
+	var = xml_tag_get_attr(tag, "msg");
+	if (var == NULL)
+		g_printerr("KILL\n");
+	else
+		g_printerr("KILL: %s\n", variant_get_string(var));
+}
+
 void talk_say(gchar *msg, void (*func)(XmlTag *, gpointer), gpointer data)
 {
 	XmlTag *tag;

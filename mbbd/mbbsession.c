@@ -10,6 +10,7 @@
 #include "mbbfunc.h"
 #include "mbblog.h"
 #include "mbbvar.h"
+#include "mbbxtv.h"
 
 #include "mbbplock.h"
 
@@ -25,6 +26,13 @@ static guint session_id = 1;
 static GHashTable *ht = NULL;
 
 static GQueue var_queue = G_QUEUE_INIT;
+
+static struct mbb_var *show_mtime_var = NULL;
+
+struct show_sessions_data {
+	XmlTag *ans;
+	gboolean show_mtime;
+};
 
 void mbb_session_add_var(struct mbb_var *var)
 {
@@ -133,6 +141,8 @@ static void mbb_session_free(struct mbb_session *ss)
 
 	if (ss->user != NULL)
 		mbb_user_unref(ss->user);
+
+	g_free(ss->peer);
 }
 
 static inline void ht_init(void)
@@ -143,12 +153,20 @@ static inline void ht_init(void)
 	);
 }
 
-guint mbb_session_new(struct mbb_session *ss)
+guint mbb_session_new(struct mbb_session *ss, gchar *peer, guint port, mbb_session_type type)
 {
 	guint sid;
 
+	ss->user = NULL;
+	ss->peer = g_strdup(peer);
+	ss->port = port;
+	ss->type = type;
+
 	time(&ss->start);
-	ss->end = 0;
+	ss->mtime = ss->start;
+
+	ss->killed = FALSE;
+	ss->kill_msg = NULL;
 
 	session_vars_init(ss);
 
@@ -163,6 +181,11 @@ guint mbb_session_new(struct mbb_session *ss)
 	mbb_plock_writer_unlock();
 
 	return sid;
+}
+
+void mbb_session_touch(struct mbb_session *ss)
+{
+	time(&ss->mtime);
 }
 
 gboolean mbb_session_auth(struct mbb_session *ss, gchar *login, gchar *secret,
@@ -220,14 +243,15 @@ gboolean mbb_session_is_http(void)
 
 static void gather_session(gpointer key, gpointer value, gpointer data)
 {
+	struct show_sessions_data *ssd;
 	struct mbb_session *ss;
 	gchar *username;
-	XmlTag *ans;
+	XmlTag *xt;
 	guint sid;
 
 	sid = GPOINTER_TO_INT(key);
 	ss = (struct mbb_session *) value;
-	ans = (XmlTag *) data;
+	ssd = (struct show_sessions_data *) data;
 
 	if (ss->user == NULL)
 		username = g_strdup("*");
@@ -237,14 +261,18 @@ static void gather_session(gpointer key, gpointer value, gpointer data)
 		mbb_user_unlock(ss->user);
 	}
 
-	xml_tag_add_child(ans, xml_tag_newc(
+	xml_tag_add_child(ssd->ans, xt = xml_tag_newc(
 		"session",
 		"sid", variant_new_int(sid),
 		"user", variant_new_alloc_string(username),
 		"peer", variant_new_string(ss->peer),
-		"start", variant_new_alloc_string(g_strdup_printf("%ld", ss->start)),
-		"end", variant_new_alloc_string(g_strdup_printf("%ld", ss->end))
+		"start", variant_new_alloc_string(g_strdup_printf("%ld", ss->start))
 	));
+
+	if (ssd->show_mtime) {
+		gchar *mtime = g_strdup_printf("%ld", ss->mtime);
+		xml_tag_set_attr(xt, "mtime", variant_new_alloc_string(mtime));
+	}
 }
 
 static void show_sessions(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
@@ -252,8 +280,13 @@ static void show_sessions(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	mbb_plock_reader_lock();
 
 	if (ht != NULL) {
+		struct show_sessions_data ssd;
+
 		*ans = mbb_xml_msg_ok();
-		g_hash_table_foreach(ht, gather_session, *ans);
+		ssd.ans = *ans;
+		ssd.show_mtime = *(gboolean *) mbb_session_var_get_data(show_mtime_var);
+
+		g_hash_table_foreach(ht, gather_session, &ssd);
 	}
 
 	mbb_plock_reader_unlock();
@@ -281,6 +314,43 @@ static gchar *var_session_user_get(gpointer p G_GNUC_UNUSED)
 	return username;
 }
 
+static void kill_session(XmlTag *tag, XmlTag **ans)
+{
+	DEFINE_XTV(XTV_SESSION_SID);
+
+	struct mbb_session *current = NULL;
+	struct mbb_session *ss = NULL;
+	guint sid = -1;
+
+	MBB_XTV_CALL(&sid);
+
+	current = current_session();
+
+	mbb_plock_reader_lock();
+
+	on_final { mbb_plock_reader_unlock(); }
+
+	if (ht != NULL)
+		ss = g_hash_table_lookup(ht, GINT_TO_POINTER(sid));
+
+	if (ss == NULL) final
+		*ans = mbb_xml_msg(MBB_MSG_UNKNOWN_SESSION);
+
+	ss->killed = TRUE;
+	if (current != NULL && current->user != NULL) {
+		if (ss->kill_msg != NULL)
+			g_free(ss->kill_msg);
+
+		mbb_user_lock(current->user);
+		ss->kill_msg = g_strdup_printf("killed by %s", current->user->name);
+		mbb_user_unlock(current->user);
+	}
+
+	mbb_plock_reader_unlock();
+
+	mbb_thread_raise(sid);
+}
+
 MBB_VAR_DEF(session_peer) {
 	.op_read = var_session_peer_get,
 	.cap_read = MBB_CAP_ALL
@@ -291,12 +361,32 @@ MBB_VAR_DEF(session_user) {
 	.cap_read = MBB_CAP_ALL
 };
 
+static gboolean session_show_mtime__ = FALSE;
+
+MBB_VAR_DEF(ss_show_mtime_def) {
+	.op_read = var_str_bool,
+	.op_write = var_conv_bool,
+	.cap_read = MBB_CAP_WHEEL,
+	.cap_write = MBB_CAP_WHEEL
+};
+
+MBB_SESSION_VAR_DEF(ss_show_mtime) {
+	.op_new = g_ptr_booldup,
+	.op_free = g_free,
+	.data = &session_show_mtime__
+};
+
 MBB_FUNC_REGISTER_STRUCT("mbb-show-sessions", show_sessions, MBB_CAP_ADMIN);
+MBB_FUNC_REGISTER_STRUCT("mbb-kill-session", kill_session, MBB_CAP_WHEEL);
 
 static void init_vars(void)
 {
 	mbb_base_var_register(SS_("peer"), &session_peer, NULL);
 	mbb_base_var_register(SS_("user"), &session_user, NULL);
+
+	show_mtime_var = mbb_session_var_register(
+		SS_("session.show.mtime"), &ss_show_mtime_def, &ss_show_mtime
+	);
 }
 
 static void __init init(void)
@@ -304,6 +394,7 @@ static void __init init(void)
 	static struct mbb_init_struct entries[] = {
 		MBB_INIT_VARS,
 		MBB_INIT_FUNC_STRUCT(show_sessions),
+		MBB_INIT_FUNC_STRUCT(kill_session)
 	};
 
 	mbb_init_pushv(entries, NELEM(entries));

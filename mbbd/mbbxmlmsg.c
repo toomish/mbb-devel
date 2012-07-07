@@ -57,7 +57,8 @@ static gchar *msg_table[] = {
 	[MBB_MSG_UNKNOWN_TASK] = "unknown task",
 	[MBB_MSG_TASK_CREATE_FAILED] = "failed to create task",
 	[MBB_MSG_TIME_NOPARENT] = "parent time not allowed",
-	[MBB_MSG_ROOT_ONLY] = "only root can do this"
+	[MBB_MSG_ROOT_ONLY] = "only root can do this",
+	[MBB_MSG_UNKNOWN_SESSION] = "unknown session"
 };
 
 static XmlTag *responsev(gchar *result, gchar *fmt, va_list ap)

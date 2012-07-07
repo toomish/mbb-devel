@@ -23,4 +23,4 @@ target_link_libraries (mbbsh mbbutil
 	${MBB_LIBRARIES} ${LUA_LIBRARIES} ${READLINE_LIBRARIES})
 
 install (TARGETS mbbsh DESTINATION bin)
-install (DIRECTORY lua DESTINATION share/mbb)
+install (DIRECTORY lua DESTINATION share/mbb FILES_MATCHING PATTERN "*.lua")

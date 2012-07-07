@@ -25,7 +25,10 @@ struct mbb_session {
 
 	mbb_session_type type;
 	time_t start;
-	time_t end;
+	time_t mtime;
+
+	gboolean killed;
+	gchar *kill_msg;
 
 	GHashTable *vars;
 };
@@ -33,7 +36,9 @@ struct mbb_session {
 void mbb_session_add_var(struct mbb_var *var);
 void mbb_session_del_var(struct mbb_var *var);
 
-guint mbb_session_new(struct mbb_session *ss);
+guint mbb_session_new(struct mbb_session *ss, gchar *peer, guint port, mbb_session_type type);
+void mbb_session_touch(struct mbb_session *ss);
+
 gboolean mbb_session_has(gint sid);
 void mbb_session_quit(guint sid);
 gboolean mbb_session_auth(struct mbb_session *ss, gchar *login, gchar *secret,

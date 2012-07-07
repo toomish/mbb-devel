@@ -84,8 +84,18 @@ function show_sessions(tag)
 	for n, xt in ipairs(xml_tag_nsort(xml.session, "_sid")) do
 		local fmt = "%-7s%10s@%-15s {%s}"
 
-		printf(fmt, xt._sid, xt._user, xt._peer, timefmt(xt._start))
+		if not xt._mtime then
+			printf(fmt, xt._sid, xt._user, xt._peer, timefmt(xt._start))
+		else
+			fmt = fmt .. " {%s}"
+			printf(fmt, xt._sid, xt._user, xt._peer, timefmt(xt._start), timefmt(xt._mtime))
+		end
 	end
+end
+
+function kill_session(tag, id)
+	tag.session._sid = id
+	mbb.request(tag)
 end
 
 cmd_register("self show methods", "mbb-self-show-methods", "show_methods")
@@ -95,4 +105,5 @@ cmd_register("drop authkey", "mbb-drop-auth-key", "drop_auth_key", 1)
 cmd_register("show authkeys", "mbb-show-auth-keys", "show_auth_keys")
 cmd_register("server get time", "mbb-server-get-time", "server_get_time")
 cmd_register("show sessions", "mbb-show-sessions", "show_sessions")
+cmd_register("kill session", "mbb-kill-session", "kill_session", 1)
 cmd_register("server auth list", "mbb-server-auth-list", "show_auth_methods")

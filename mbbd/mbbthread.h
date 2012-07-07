@@ -32,6 +32,8 @@ gint mbb_thread_get_tid(void);
 MbbMsgQueue *mbb_thread_get_msg_queue(void);
 Signaller *mbb_thread_get_signaller(void);
 
+void mbb_thread_raise(guint tid);
+
 void mbb_thread_update_cap(struct thread_env *te);
 
 void mbb_thread_http_client(struct thread_env *te);

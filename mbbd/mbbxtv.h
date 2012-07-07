@@ -75,6 +75,7 @@ XmlTag *mbb_xtv_call_z(XmlTag *tag, XmlTagVar **xtv, ...);
 #define XTV_ATTR_VALUE &xtv_attr_value, XTV_FALSE
 #define XTV_KEY_VALUE &xtv_key_value, XTV_FALSE
 #define XTV_OBJ_NAME &xtv_obj_name, XTV_FALSE
+#define XTV_SESSION_SID &xtv_session_sid, XTV_FALSE
 #define XTV_SESSION_SID_ &xtv_session_sid, XTV_TRUE
 
 DEFINE_EXTERN(regex_value);
