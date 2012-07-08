@@ -142,6 +142,7 @@ static void mbb_session_free(struct mbb_session *ss)
 	if (ss->user != NULL)
 		mbb_user_unref(ss->user);
 
+	g_free(ss->kill_msg);
 	g_free(ss->peer);
 }
 
