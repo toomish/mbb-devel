@@ -91,7 +91,7 @@ static void lua_env_set_error(lua_State *ls, gint ecode, GError **error)
 	if (ecode != LUA_ENV_ERROR_MEM && lua_isstring(ls, -1))
 		msg = lua_tostring(ls, -1);
 
-	g_set_error(error, LUA_ENV_ERROR, ecode, msg);
+	g_set_error(error, LUA_ENV_ERROR, ecode, "%s", msg);
 }
 
 gboolean lua_env_init(lua_State *ls, GError **error)
