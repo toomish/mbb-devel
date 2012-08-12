@@ -42,7 +42,7 @@ static const gchar *opt_user;
 static const gchar *opt_pass = NULL;
 static const gchar *opt_key = NULL;
 static const gchar *opt_dir = DEFAULT_LUA_DIR;
-static const gchar *opt_file = NULL;
+static gchar **opt_file = NULL;
 static gboolean opt_nosh = FALSE;
 static gboolean opt_follow = FALSE;
 static gboolean caught_sigint = FALSE;
@@ -833,7 +833,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 		{ "pass", 'p', 0, G_OPTION_ARG_STRING, &opt_pass, "password", NULL },
 		{ "key", 'k', 0, G_OPTION_ARG_STRING, &opt_key, "auth key", NULL },
 		{ "init", 'i', 0, G_OPTION_ARG_STRING, &opt_dir, "init.lua directory", DEFAULT_LUA_DIR },
-		{ "load", 'l', 0, G_OPTION_ARG_STRING, &opt_file, "lua file to execute", NULL },
+		{ "load", 'l', 0, G_OPTION_ARG_FILENAME_ARRAY, &opt_file, "lua file to execute", NULL },
 		{ "nosh", 'n', 0, G_OPTION_ARG_NONE, &opt_nosh, "no shell, scripts only", NULL },
 		{ "follow", 'f', 0, G_OPTION_ARG_NONE, &opt_follow, "show output when stdin is closed", NULL },
 		{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -904,12 +904,18 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 		errx(1, "auth failed");
 
 	if (opt_file != NULL) {
-		if (! lua_env_dofile(lua_env, opt_file, &error)) {
-			lua_env_close(lua_env);
-			talk_fini();
+		gchar **strp = opt_file;
 
-			errx(1, "lua_env_dofile: %s", error->message);
+		for (; *strp != NULL; strp++) {
+			if (! lua_env_dofile(lua_env, *strp, &error)) {
+				lua_env_close(lua_env);
+				talk_fini();
+
+				errx(1, "lua_env_dofile: %s", error->message);
+			}
 		}
+
+		g_strfreev(opt_file);
 	}
 
 	if (opt_nosh) {
