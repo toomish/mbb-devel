@@ -11,7 +11,9 @@
 
 #include "varconv.h"
 
-#define SS_(v) "@." v
+#define MBB_SESSION_VAR_PREFIX "@."
+
+#define SS_(v) MBB_SESSION_VAR_PREFIX v
 
 #define MBB_VAR_ERROR (mbb_var_error_quark())
 

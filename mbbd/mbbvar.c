@@ -42,7 +42,7 @@ struct mbb_var {
 #define VAR_PRIV(var) ((gpointer) var->data)
 
 static GHashTable *ht = NULL;
-static GHashTable *ht_cache = NULL;
+static GHashTable *ht_cache_global = NULL;
 
 static gchar *mbb_var_read(struct mbb_var *var);
 
@@ -336,8 +336,19 @@ gboolean mbb_var_mregister(struct mbb_var *var, MbbModule *mod)
 	if (mbb_var_is_base(var) && mbb_var_can_write(var, MBB_CAP_ROOT)) {
 		gchar *value = NULL;
 
-		if (ht_cache != NULL)
-			value = g_hash_table_lookup(ht_cache, var->name);
+		if (! g_str_has_prefix(var->name, MBB_SESSION_VAR_PREFIX)) {
+			gchar *name;
+
+			name = g_strdup_printf(
+				"%s%s", MBB_SESSION_VAR_PREFIX, var->name
+			);
+
+			value = mbb_var_cache_get(name);
+			g_free(name);
+		}
+
+		if (value == NULL)
+			value = mbb_var_cache_get(var->name);
 
 		if (value != NULL) {
 			if (! mbb_base_var_write(var, value))
@@ -544,15 +555,27 @@ static void show_vars(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	re_free(re);
 }
 
-void mbb_var_cache_add(gchar *name, gchar *value)
+static GHashTable *mbb_var_get_cache_table(gchar *name, gboolean create)
 {
-	if (ht_cache == NULL) {
-		ht_cache = g_hash_table_new_full(
+	if (g_str_has_prefix(name, MBB_SESSION_VAR_PREFIX))
+		return mbb_session_get_cached(create);
+
+	if (ht_cache_global == NULL && create) {
+		ht_cache_global = g_hash_table_new_full(
 			g_str_hash, g_str_equal, g_free, g_free
 		);
 	}
 
-	g_hash_table_replace(ht_cache, name, value);
+	return ht_cache_global;
+}
+
+void mbb_var_cache_add(gchar *name, gchar *value)
+{
+	GHashTable *cache = mbb_var_get_cache_table(name, TRUE);
+
+	if (cache != NULL) {
+		g_hash_table_replace(cache, name, value);
+	}
 }
 
 void mbb_var_cache_save(struct mbb_var *var)
@@ -584,10 +607,12 @@ void mbb_var_cache_load(struct mbb_var *var)
 
 gchar *mbb_var_cache_get(gchar *name)
 {
-	if (ht_cache == NULL)
+	GHashTable *cache = mbb_var_get_cache_table(name, FALSE);
+
+	if (cache == NULL)
 		return NULL;
 
-	return g_hash_table_lookup(ht_cache, name);
+	return g_hash_table_lookup(cache, name);
 }
 
 static void var_cache_add(XmlTag *tag, XmlTag **ans)
@@ -654,14 +679,17 @@ static void var_cache_del(XmlTag *tag, XmlTag **ans G_GNUC_UNUSED)
 {
 	DEFINE_XTV(XTV_VAR_NAME);
 
+	GHashTable *cache;
 	gchar *name;
 
 	MBB_XTV_CALL(&name);
 
 	mbb_plock_writer_lock();
 
-	if (ht_cache != NULL)
-		g_hash_table_remove(ht_cache, name);
+	cache = mbb_var_get_cache_table(name, FALSE);
+
+	if (cache != NULL)
+		g_hash_table_remove(cache, name);
 
 	mbb_plock_writer_unlock();
 }
@@ -696,11 +724,18 @@ static void var_cache_list_gather(gpointer key, gpointer value G_GNUC_UNUSED, gp
 
 static void var_cache_list(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 {
+	GHashTable *cache;
+
 	*ans = mbb_xml_msg_ok();
 
 	mbb_plock_reader_lock();
-	if (ht_cache != NULL)
-		g_hash_table_foreach(ht_cache, var_cache_list_gather, *ans);
+
+	if (ht_cache_global != NULL)
+		g_hash_table_foreach(ht_cache_global, var_cache_list_gather, *ans);
+
+	if ((cache = mbb_session_get_cached(FALSE)) != NULL)
+		g_hash_table_foreach(cache, var_cache_list_gather, *ans);
+
 	mbb_plock_reader_unlock();
 }
 
@@ -714,11 +749,18 @@ static void show_cached_gather(gpointer key, gpointer value, gpointer data)
 
 static void show_cached(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 {
+	GHashTable *cache;
+
 	*ans = mbb_xml_msg_ok();
 
 	mbb_plock_reader_lock();
-	if (ht_cache != NULL)
-		g_hash_table_foreach(ht_cache, show_cached_gather, *ans);
+
+	if (ht_cache_global != NULL)
+		g_hash_table_foreach(ht_cache_global, show_cached_gather, *ans);
+
+	if ((cache = mbb_session_get_cached(FALSE)) != NULL)
+		g_hash_table_foreach(cache, show_cached_gather, *ans);
+
 	mbb_plock_reader_unlock();
 }
 

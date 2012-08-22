@@ -144,6 +144,9 @@ static void mbb_session_free(struct mbb_session *ss)
 
 	g_free(ss->kill_msg);
 	g_free(ss->peer);
+
+	if (ss->cached_vars != NULL)
+		g_hash_table_destroy(ss->cached_vars);
 }
 
 static inline void ht_init(void)
@@ -168,6 +171,8 @@ guint mbb_session_new(struct mbb_session *ss, gchar *peer, guint port, mbb_sessi
 
 	ss->killed = FALSE;
 	ss->kill_msg = NULL;
+
+	ss->cached_vars = NULL;
 
 	session_vars_init(ss);
 
@@ -240,6 +245,25 @@ gboolean mbb_session_is_http(void)
 		return FALSE;
 
 	return ss->type == MBB_SESSION_HTTP;
+}
+
+GHashTable *mbb_session_get_cached(gboolean create)
+{
+	struct mbb_session *ss;
+
+	if ((ss = current_session()) == NULL)
+		return NULL;
+
+	if (create == FALSE)
+		return ss->cached_vars;
+
+	if (ss->cached_vars == NULL) {
+                ss->cached_vars = g_hash_table_new_full(
+                        g_str_hash, g_str_equal, g_free, g_free
+                );
+        }
+
+	return ss->cached_vars;
 }
 
 static void gather_session(gpointer key, gpointer value, gpointer data)

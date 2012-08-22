@@ -31,6 +31,7 @@ struct mbb_session {
 	gchar *kill_msg;
 
 	GHashTable *vars;
+	GHashTable *cached_vars;
 };
 
 void mbb_session_add_var(struct mbb_var *var);
@@ -47,6 +48,6 @@ gboolean mbb_session_auth(struct mbb_session *ss, gchar *login, gchar *secret,
 struct mbb_session *current_session(void);
 gboolean mbb_session_is_http(void);
 
-struct mbb_var *mbb_session_get_var(gchar *name);
+GHashTable *mbb_session_get_cached(gboolean create);
 
 #endif
