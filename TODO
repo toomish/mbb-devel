@@ -155,3 +155,6 @@ OK 54. unit map sync - rebuild local map and add to main
 58. save calculated netflow files to separate file
 59. mbbd internal logging to file
 60. auto map rebuild before calculating
+
+61. implement module that will build the map on startup
+62. add function to find out of map netflow streams
