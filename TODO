@@ -158,3 +158,4 @@ OK 54. unit map sync - rebuild local map and add to main
 
 61. implement module that will build the map on startup
 62. add function to find out of map netflow streams
+63. module on load function

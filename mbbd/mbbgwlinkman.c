@@ -276,24 +276,13 @@ static void gwlink_mod_time(XmlTag *tag, XmlTag **ans)
 	mbb_lock_writer_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-gwlinks", show_gwlinks, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-operator-show-gwlinks", operator_show_gwlinks, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-gateway-show-gwlinks", gateway_show_gwlinks, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-add-gwlink", add_gwlink, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-gwlink", drop_gwlink, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-gwlink-mod-time", gwlink_mod_time, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-gwlinks", show_gwlinks, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-operator-show-gwlinks", operator_show_gwlinks, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-gateway-show-gwlinks", gateway_show_gwlinks, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-add-gwlink", add_gwlink, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-drop-gwlink", drop_gwlink, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-gwlink-mod-time", gwlink_mod_time, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_gwlinks),
-		MBB_INIT_FUNC_STRUCT(operator_show_gwlinks),
-		MBB_INIT_FUNC_STRUCT(gateway_show_gwlinks),
-		MBB_INIT_FUNC_STRUCT(add_gwlink),
-		MBB_INIT_FUNC_STRUCT(drop_gwlink),
-		MBB_INIT_FUNC_STRUCT(gwlink_mod_time)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

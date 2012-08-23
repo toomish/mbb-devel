@@ -165,22 +165,12 @@ static void group_del_user(XmlTag *tag, XmlTag **ans)
 	group_do_user(tag, ans, FALSE);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-groups", show_groups, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-group-show-users", group_show_users, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-group-mod-name", group_mod_name, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-group-add-user", group_add_user, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-group-del-user", group_del_user, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-groups", show_groups, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-group-show-users", group_show_users, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-group-mod-name", group_mod_name, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-group-add-user", group_add_user, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-group-del-user", group_del_user, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_groups),
-		MBB_INIT_FUNC_STRUCT(group_show_users),
-		MBB_INIT_FUNC_STRUCT(group_mod_name),
-		MBB_INIT_FUNC_STRUCT(group_add_user),
-		MBB_INIT_FUNC_STRUCT(group_del_user)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

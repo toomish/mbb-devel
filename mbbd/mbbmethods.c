@@ -58,16 +58,9 @@ static void self_show_methods(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	show_methods_common(mbb_thread_get_cap(), ans);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-self-show-methods", self_show_methods, MBB_CAP_ALL_DUMMY);
-MBB_FUNC_REGISTER_STRUCT("mbb-user-show-methods", user_show_methods, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-self-show-methods", self_show_methods, MBB_CAP_ALL_DUMMY),
+	MBB_FUNC_STRUCT("mbb-user-show-methods", user_show_methods, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(self_show_methods),
-		MBB_INIT_FUNC_STRUCT(user_show_methods)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

@@ -449,37 +449,21 @@ static void unit_map_clear(XmlTag *tag, XmlTag **ans)
 	mbb_lock_writer_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-show-raw-inet", unit_show_raw_inet, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-unit-show-raw-inet", unit_show_raw_inet, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-add-inet", unit_add_inet, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-drop-inet", drop_inet, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-clear-inet", unit_clear_inet, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-unit-add-inet", unit_add_inet, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-drop-inet", drop_inet, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-unit-clear-inet", unit_clear_inet, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-mod-inet-time", unit_mod_inet_time, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-mod-inet-nice", unit_mod_inet_nice, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-unit-mod-inet-time", unit_mod_inet_time, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-mod-inet-nice", unit_mod_inet_nice, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-map-showall", unit_map_showall, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-map-show", unit_map_show, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-map-inet-showall", unit_map_inet_showall, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-map-rebuild", unit_map_rebuild, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-map-clear", unit_map_clear, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-unit-map-showall", unit_map_showall, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-map-show", unit_map_show, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-map-inet-showall", unit_map_inet_showall, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-map-rebuild", unit_map_rebuild, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-map-clear", unit_map_clear, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(unit_show_raw_inet),
-		MBB_INIT_FUNC_STRUCT(unit_add_inet),
-		MBB_INIT_FUNC_STRUCT(drop_inet),
-		MBB_INIT_FUNC_STRUCT(unit_clear_inet),
-		MBB_INIT_FUNC_STRUCT(unit_mod_inet_time),
-		MBB_INIT_FUNC_STRUCT(unit_mod_inet_nice),
-		MBB_INIT_FUNC_STRUCT(unit_map_showall),
-		MBB_INIT_FUNC_STRUCT(unit_map_show),
-		MBB_INIT_FUNC_STRUCT(unit_map_rebuild),
-		MBB_INIT_FUNC_STRUCT(unit_map_inet_showall),
-		MBB_INIT_FUNC_STRUCT(unit_map_clear)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

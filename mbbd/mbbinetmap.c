@@ -612,18 +612,20 @@ static void map_find_unit(XmlTag *tag, XmlTag **ans)
 	mbb_lock_reader_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-map-add-unit", map_add_unit, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-map-del-unit", map_del_unit, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-map-add-unit", map_add_unit, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-map-del-unit", map_del_unit, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-map-show-all", map_show_all, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-map-show-inet", map_show_inet, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-map-show-unit", map_show_unit, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-map-show-all", map_show_all, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-map-show-inet", map_show_inet, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-map-show-unit", map_show_unit, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-map-clear", inet_map_clear, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-map-glue-null", inet_map_glue_null, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-map-clear", inet_map_clear, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-map-glue-null", inet_map_glue_null, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-map-find-net", map_find_net, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-map-find-unit", map_find_unit, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-map-find-net", map_find_net, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-map-find-unit", map_find_unit, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
 MBB_VAR_DEF(mga_def) {
 	.op_read = var_str_bool,
@@ -637,22 +639,4 @@ static void init_vars(void)
 	mbb_base_var_register("map.glue.auto", &mga_def, &map_glue_auto);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_VARS,
-
-		MBB_INIT_FUNC_STRUCT(map_add_unit),
-		MBB_INIT_FUNC_STRUCT(map_del_unit),
-		MBB_INIT_FUNC_STRUCT(map_show_all),
-		MBB_INIT_FUNC_STRUCT(map_show_inet),
-		MBB_INIT_FUNC_STRUCT(map_show_unit),
-		MBB_INIT_FUNC_STRUCT(inet_map_clear),
-		MBB_INIT_FUNC_STRUCT(inet_map_glue_null),
-		MBB_INIT_FUNC_STRUCT(map_find_net),
-		MBB_INIT_FUNC_STRUCT(map_find_unit)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

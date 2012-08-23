@@ -451,15 +451,17 @@ static void stat_wipe(XmlTag *tag, XmlTag **ans)
 		*ans = mbb_xml_msg_from_error(error);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-unit", stat_unit, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-consumer", stat_consumer, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-operator", stat_operator, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-link", stat_link, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-gateway", stat_gateway, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-stat-wipe", stat_wipe, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-stat-unit", stat_unit, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-stat-consumer", stat_consumer, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-stat-operator", stat_operator, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-stat-link", stat_link, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-stat-gateway", stat_gateway, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-stat-wipe", stat_wipe, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-self-stat-unit", self_stat_unit, MBB_CAP_CONS);
-MBB_FUNC_REGISTER_STRUCT("mbb-self-stat-consumer", self_stat_consumer, MBB_CAP_CONS);
+	MBB_FUNC_STRUCT("mbb-self-stat-unit", self_stat_unit, MBB_CAP_CONS),
+	MBB_FUNC_STRUCT("mbb-self-stat-consumer", self_stat_consumer, MBB_CAP_CONS),
+MBB_INIT_FUNCTIONS_END
 
 static void load_module(void)
 {
@@ -477,14 +479,7 @@ static void load_module(void)
 
 	mbb_module_export(&si);
 
-	mbb_module_add_func(&MBB_FUNC(stat_unit));
-	mbb_module_add_func(&MBB_FUNC(stat_consumer));
-	mbb_module_add_func(&MBB_FUNC(stat_operator));
-	mbb_module_add_func(&MBB_FUNC(stat_link));
-	mbb_module_add_func(&MBB_FUNC(stat_gateway));
-	mbb_module_add_func(&MBB_FUNC(stat_wipe));
-	mbb_module_add_func(&MBB_FUNC(self_stat_unit));
-	mbb_module_add_func(&MBB_FUNC(self_stat_consumer));
+	mbb_module_add_functions(MBB_INIT_FUNCTIONS_TABLE);
 }
 
 static void unload_module(void)

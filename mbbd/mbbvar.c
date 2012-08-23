@@ -764,34 +764,18 @@ static void show_cached(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	mbb_plock_reader_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-var-list", var_list, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-show", var_show, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-set", var_set, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-vars", show_vars, MBB_CAP_ALL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-var-list", var_list, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-var-show", var_show, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-var-set", var_set, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-show-vars", show_vars, MBB_CAP_ALL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-var-cache-add", var_cache_add, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-cache-load", var_cache_load, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-cache-del", var_cache_del, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-cache-show", var_cache_show, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-var-cache-list", var_cache_list, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-cached", show_cached, MBB_CAP_ALL);
+	MBB_FUNC_STRUCT("mbb-var-cache-add", var_cache_add, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-var-cache-load", var_cache_load, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-var-cache-del", var_cache_del, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-var-cache-show", var_cache_show, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-var-cache-list", var_cache_list, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-show-cached", show_cached, MBB_CAP_ALL),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(var_list),
-		MBB_INIT_FUNC_STRUCT(var_show),
-		MBB_INIT_FUNC_STRUCT(var_set),
-		MBB_INIT_FUNC_STRUCT(show_vars),
-
-		MBB_INIT_FUNC_STRUCT(var_cache_add),
-		MBB_INIT_FUNC_STRUCT(var_cache_load),
-		MBB_INIT_FUNC_STRUCT(var_cache_del),
-		MBB_INIT_FUNC_STRUCT(var_cache_show),
-		MBB_INIT_FUNC_STRUCT(var_cache_list),
-		MBB_INIT_FUNC_STRUCT(show_cached)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

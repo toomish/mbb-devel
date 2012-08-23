@@ -271,30 +271,17 @@ static void self_mod_pass(XmlTag *tag, XmlTag **ans)
 	mbb_log_debug("self mod pass");
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-users", show_users, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-user-show-groups", user_show_groups, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-self-show-groups", self_show_groups, MBB_CAP_ALL_DUMMY);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-users", show_users, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-user-show-groups", user_show_groups, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-self-show-groups", self_show_groups, MBB_CAP_ALL_DUMMY),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-add-user", add_user, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-user-mod-name", user_mod_name, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-user-mod-pass", user_mod_pass, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-self-mod-pass", self_mod_pass, MBB_CAP_ALL);
+	MBB_FUNC_STRUCT("mbb-add-user", add_user, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-user-mod-name", user_mod_name, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-user-mod-pass", user_mod_pass, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-self-mod-pass", self_mod_pass, MBB_CAP_ALL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-user", drop_user, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-drop-user", drop_user, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_users),
-		MBB_INIT_FUNC_STRUCT(user_show_groups),
-		MBB_INIT_FUNC_STRUCT(self_show_groups),
-		MBB_INIT_FUNC_STRUCT(add_user),
-		MBB_INIT_FUNC_STRUCT(drop_user),
-		MBB_INIT_FUNC_STRUCT(user_mod_name),
-		MBB_INIT_FUNC_STRUCT(user_mod_pass),
-		MBB_INIT_FUNC_STRUCT(self_mod_pass)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

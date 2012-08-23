@@ -612,14 +612,16 @@ static void mbb_attr_find(XmlTag *tag, XmlTag **ans)
 	mbb_plock_reader_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-list", mbb_attr_list, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-add", mbb_attr_add, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-del", mbb_attr_del, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-rename", mbb_attr_rename, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-set", mbb_attr_set, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-unset", mbb_attr_unset, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-get", mbb_attr_get, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-attr-find", mbb_attr_find, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-attr-list", mbb_attr_list, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-attr-add", mbb_attr_add, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-attr-del", mbb_attr_del, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-attr-rename", mbb_attr_rename, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-attr-set", mbb_attr_set, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-attr-unset", mbb_attr_unset, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-attr-get", mbb_attr_get, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-attr-find", mbb_attr_find, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
 static void load_module(void)
 {
@@ -635,14 +637,7 @@ static void load_module(void)
 
 	mbb_module_export(&ai);
 
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_list));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_add));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_del));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_rename));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_set));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_unset));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_get));
-	mbb_module_add_func(&MBB_FUNC(mbb_attr_find));
+	mbb_module_add_functions(MBB_INIT_FUNCTIONS_TABLE);
 }
 
 static void unload_module(void)

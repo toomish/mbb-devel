@@ -472,10 +472,4 @@ static void init_vars(void)
 	ham_var = mbb_base_var_register("http.auth.method", &ham_def, &http_auth_method);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entry = MBB_INIT_VARS;
-
-	mbb_init_push(&entry);
-}
-
+MBB_ON_INIT(MBB_INIT_VARS)

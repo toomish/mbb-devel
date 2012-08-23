@@ -11,32 +11,38 @@
 
 static GHashTable *ht = NULL;
 
-void mbb_func_register(struct mbb_func_struct *func_struct)
+void mbb_func_register_all(struct mbb_func_struct *func_struct)
 {
 	if (ht == NULL)
 		ht = g_hash_table_new(g_str_hash, g_str_equal);
 
-	g_hash_table_insert(ht, func_struct->name, func_struct);
+	for (; func_struct->name != NULL; func_struct++)
+		g_hash_table_insert(ht, func_struct->name, func_struct);
 }
 
-gboolean mbb_func_mregister(struct mbb_func_struct *func_struct, MbbModule *mod)
+guint mbb_func_mregister(struct mbb_func_struct *func_struct, MbbModule *mod)
 {
+	guint count = 0;
+
 	mbb_plock_writer_lock();
 
 	if (ht == NULL)
 		ht = g_hash_table_new(g_str_hash, g_str_equal);
-	else if (g_hash_table_lookup(ht, func_struct->name) != NULL) {
-		mbb_plock_writer_unlock();
-		mbb_log_self("register func '%s' failed", func_struct->name);
-		return FALSE;
-	}
 
-	func_struct->module = mod;
-	g_hash_table_insert(ht, func_struct->name, func_struct);
+	for (; func_struct->name != NULL; func_struct++) {
+		if (g_hash_table_lookup(ht, func_struct->name) != NULL) {
+			mbb_log_self("register func '%s' failed", func_struct->name);
+			continue;
+		}
+
+		func_struct->module = mod;
+		g_hash_table_insert(ht, func_struct->name, func_struct);
+		count++;
+	}
 
 	mbb_plock_writer_unlock();
 
-	return TRUE;
+	return count;
 }
 
 void mbb_func_unregister(struct mbb_func_struct *func_struct)
@@ -45,6 +51,22 @@ void mbb_func_unregister(struct mbb_func_struct *func_struct)
 
 	if (ht != NULL)
 		g_hash_table_remove(ht, func_struct->name);
+
+	mbb_plock_writer_unlock();
+}
+
+void mbb_func_unregister_all(struct mbb_func_struct *func_struct)
+{
+	mbb_plock_writer_lock();
+
+	if (ht != NULL) {
+		for (; func_struct->name != NULL; func_struct++) {
+			if (func_struct->module != NULL) {
+				g_hash_table_remove(ht, func_struct->name);
+				func_struct->module = NULL;
+			}
+		}
+	}
 
 	mbb_plock_writer_unlock();
 }

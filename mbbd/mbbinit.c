@@ -6,16 +6,12 @@
 static struct mbb_init_struct *init_struct_head = NULL;
 static gboolean initialized = FALSE;
 
-void mbb_init_push(struct mbb_init_struct *init_struct)
+void mbb_init_push(struct mbb_init_struct *init_struct, gsize count)
 {
-	init_struct->next = init_struct_head;
-	init_struct_head = init_struct;
-}
-
-void mbb_init_pushv(struct mbb_init_struct *p, gsize count)
-{
-	for (; count > 0; p++, count--)
-		mbb_init_push(p);
+	for (; count > 0; init_struct++, count--) {
+		init_struct->next = init_struct_head;
+		init_struct_head = init_struct;
+	}
 }
 
 void mbb_init(void)

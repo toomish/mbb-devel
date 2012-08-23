@@ -439,9 +439,11 @@ MBB_DEFINE_VAR(
 	MBB_CAP_ALL, MBB_CAP_ADMIN
 );
 
-MBB_FUNC_REGISTER_STRUCT("mbb-pinger-add", mbb_pinger_add, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-pinger-del", mbb_pinger_del, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-pinger-show-units", mbb_pinger_show_units, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-pinger-add", mbb_pinger_add, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-pinger-del", mbb_pinger_del, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-pinger-show-units", mbb_pinger_show_units, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
 static void load_module(void)
 {
@@ -465,9 +467,7 @@ static void load_module(void)
 	mbb_module_add_var(&MBB_VAR(pinger_default_period));
 	mbb_module_add_var(&MBB_VAR(pinger_warn_timeout));
 
-	mbb_module_add_func(&MBB_FUNC(mbb_pinger_add));
-	mbb_module_add_func(&MBB_FUNC(mbb_pinger_del));
-	mbb_module_add_func(&MBB_FUNC(mbb_pinger_show_units));
+	mbb_module_add_functions(MBB_INIT_FUNCTIONS_TABLE);
 }
 
 static void unload_module(void)

@@ -127,20 +127,11 @@ static void operator_mod_name(XmlTag *tag, XmlTag **ans)
 	mbb_log_debug("operator '%s' mod name '%s'", name, newname);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-operators", show_operators, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-add-operator", add_operator, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-operator", drop_operator, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-operator-mod-name", operator_mod_name, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-operators", show_operators, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-add-operator", add_operator, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-drop-operator", drop_operator, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-operator-mod-name", operator_mod_name, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_operators),
-		MBB_INIT_FUNC_STRUCT(add_operator),
-		MBB_INIT_FUNC_STRUCT(drop_operator),
-		MBB_INIT_FUNC_STRUCT(operator_mod_name)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

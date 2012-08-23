@@ -349,20 +349,11 @@ static void show_tasks(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	mbb_plock_reader_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-task-run", task_run, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-task-stop", task_stop, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-task-cancel", task_cancel, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-tasks", show_tasks, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-task-run", task_run, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-task-stop", task_stop, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-task-cancel", task_cancel, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-show-tasks", show_tasks, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(task_run),
-		MBB_INIT_FUNC_STRUCT(task_stop),
-		MBB_INIT_FUNC_STRUCT(task_cancel),
-		MBB_INIT_FUNC_STRUCT(show_tasks)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

@@ -401,8 +401,10 @@ MBB_SESSION_VAR_DEF(ss_show_mtime) {
 	.data = &session_show_mtime__
 };
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-sessions", show_sessions, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-kill-session", kill_session, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-sessions", show_sessions, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-kill-session", kill_session, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
 static void init_vars(void)
 {
@@ -414,14 +416,4 @@ static void init_vars(void)
 	);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_VARS,
-		MBB_INIT_FUNC_STRUCT(show_sessions),
-		MBB_INIT_FUNC_STRUCT(kill_session)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

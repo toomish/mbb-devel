@@ -164,20 +164,13 @@ static void auth_method_list(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	mbb_plock_reader_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-server-auth-list", auth_method_list, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-server-auth-list", auth_method_list, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
 static void init_vars(void)
 {
 	mbb_auth_method_register("plain", mbb_auth_plain);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entry[] = {
-		MBB_INIT_VARS,
-		MBB_INIT_FUNC_STRUCT(auth_method_list)
-	};
-
-	mbb_init_pushv(entry, NELEM(entry));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

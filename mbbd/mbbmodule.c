@@ -40,7 +40,7 @@ struct mbb_module {
 	volatile gboolean run;
 	time_t start;
 
-	GSList *funcs;
+	struct mbb_func_struct *functions;
 	GSList *vars;
 
 	gsize total;
@@ -197,7 +197,6 @@ static inline MbbModule *mbb_module_get_by_info(MbbModuleInfo *info)
 static void mbb_module_free(MbbModule *module)
 {
 	g_static_rw_lock_free(&module->rwlock);
-	g_slist_free(module->funcs);
 	g_slist_free(module->vars);
 	g_slist_free(module->deps);
 	g_free(module->name);
@@ -222,13 +221,8 @@ static void mbb_module_reg_data(MbbModule *mod)
 {
 	GSList *list;
 
-	for (list = mod->funcs; list != NULL; list = list->next) {
-		struct mbb_func_struct *fs = list->data;
-
-		fs->module = NULL;
-		if (mbb_func_mregister(fs, mod))
-			mod->nreg++;
-	}
+	if (mod->functions != NULL)
+		mod->nreg += mbb_func_mregister(mod->functions, mod);
 
 	for (list = mod->vars; list != NULL; list = list->next) {
 		if (mbb_var_mregister(list->data, mod))
@@ -243,14 +237,8 @@ static void mbb_module_unreg_data(MbbModule *mod)
 {
 	GSList *list;
 
-	for (list = mod->funcs; list != NULL; list = list->next) {
-		struct mbb_func_struct *fs = list->data;
-
-		if (fs->module != NULL) {
-			mbb_func_unregister(fs);
-			fs->module = NULL;
-		}
-	}
+	if (mod->functions != NULL)
+		mbb_func_unregister_all(mod->functions);
 
 	for (list = mod->vars; list != NULL; list = list->next) {
 		struct mbb_var *var = list->data;
@@ -265,18 +253,15 @@ static void mbb_module_unreg_data(MbbModule *mod)
 		_mbb_module_unuse(list->data, FALSE);
 }
 
-void mbb_module_add_func(struct mbb_func_struct *fs)
-{
-	mbb_module_add_funcv(fs, 1);
-}
-
-void mbb_module_add_funcv(struct mbb_func_struct *fs, gsize count)
+void mbb_module_add_functions(struct mbb_func_struct *fs)
 {
 	MbbModule *module = mbb_module_current();
 
-	if (module != NULL) for (; count; fs++, count--) {
-		module->funcs = g_slist_prepend(module->funcs, fs);
-		module->total++;
+	if (module != NULL && module->functions == NULL) {
+		module->functions = fs;
+
+		for (; fs->name != NULL; fs++)
+			module->total++;
 	}
 }
 
@@ -671,16 +656,20 @@ static void module_info(XmlTag *tag, XmlTag **ans)
 
 	if (with_groups) mbb_lock_reader_lock();
 
-	for (list = mod->funcs; list != NULL; list = list->next) {
-		struct mbb_func_struct *fs = list->data;
+	if (mod->functions != NULL) {
+		struct mbb_func_struct *func = mod->functions;
 
-		xt = xml_tag_new_child(*ans, "func",
-			"name", variant_new_string(fs->name),
-			"reg", variant_new_static_string(bool2str(fs->module != NULL))
-		);
+		for (; func->name != NULL; func++) {
+			gboolean isreg = func->module != NULL;
 
-		if (with_groups)
-			add_group_tags(fs->cap_mask, xt);
+			xt = xml_tag_new_child(*ans, "func",
+				"name", variant_new_string(func->name),
+				"reg", variant_new_static_string(bool2str(isreg))
+			);
+
+			if (with_groups)
+				add_group_tags(func->cap_mask, xt);
+		}
 	}
 
 	for (list = mod->vars; list != NULL; list = list->next) {
@@ -787,16 +776,18 @@ static void module_vars_load(XmlTag *tag, XmlTag **ans)
 	module_vars_do(tag, ans, mbb_var_cache_load);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-module-list", module_list, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-load", module_load, MBB_CAP_ROOT);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-unload", module_unload, MBB_CAP_ROOT);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-modules", show_modules, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-info", module_info, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-run", module_run, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-stop", module_stop, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-module-list", module_list, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-module-load", module_load, MBB_CAP_ROOT),
+	MBB_FUNC_STRUCT("mbb-module-unload", module_unload, MBB_CAP_ROOT),
+	MBB_FUNC_STRUCT("mbb-show-modules", show_modules, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-module-info", module_info, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-module-run", module_run, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-module-stop", module_stop, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-module-vars-save", module_vars_save, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-module-vars-load", module_vars_load, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-module-vars-save", module_vars_save, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-module-vars-load", module_vars_load, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
 MBB_VAR_DEF(md_def) {
 	.op_read = var_str_str,
@@ -817,23 +808,4 @@ static void init_vars(void)
 	md_var = mbb_session_var_register(SS_("module.dir"), &md_def, &ss_md);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_VARS,
-
-		MBB_INIT_FUNC_STRUCT(module_list),
-		MBB_INIT_FUNC_STRUCT(module_load),
-		MBB_INIT_FUNC_STRUCT(module_unload),
-		MBB_INIT_FUNC_STRUCT(show_modules),
-		MBB_INIT_FUNC_STRUCT(module_info),
-		MBB_INIT_FUNC_STRUCT(module_run),
-		MBB_INIT_FUNC_STRUCT(module_stop),
-
-		MBB_INIT_FUNC_STRUCT(module_vars_save),
-		MBB_INIT_FUNC_STRUCT(module_vars_load)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

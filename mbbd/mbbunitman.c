@@ -565,49 +565,29 @@ static void unit_local_del(XmlTag *tag, XmlTag **ans)
 	unit_local_do(tag, ans, FALSE);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-units", show_units, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-show-self", unit_show_self, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-units", show_units, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-show-self", unit_show_self, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-add-unit", add_unit, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-unit", drop_unit, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-add-unit", add_unit, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-drop-unit", drop_unit, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-mod-name", unit_mod_name, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-mod-time", unit_mod_time, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-unit-mod-name", unit_mod_name, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-mod-time", unit_mod_time, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-set-consumer", unit_set_consumer, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-unset-consumer", unit_unset_consumer, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-unit-set-consumer", unit_set_consumer, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-unset-consumer", unit_unset_consumer, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-consumer-add-unit", consumer_add_unit, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-consumer-add-unit", consumer_add_unit, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-mapped-units", show_mapped_units, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-nomapped-units", show_nomapped_units, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-show-mapped-units", show_mapped_units, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-show-nomapped-units", show_nomapped_units, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-local-units", show_local_units, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-local-add", unit_local_add, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-unit-local-del", unit_local_del, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-show-local-units", show_local_units, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-unit-local-add", unit_local_add, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-unit-local-del", unit_local_del, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-self-show-units", self_show_units, MBB_CAP_CONS);
+	MBB_FUNC_STRUCT("mbb-self-show-units", self_show_units, MBB_CAP_CONS),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_units),
-		MBB_INIT_FUNC_STRUCT(add_unit),
-		MBB_INIT_FUNC_STRUCT(drop_unit),
-		MBB_INIT_FUNC_STRUCT(unit_mod_name),
-		MBB_INIT_FUNC_STRUCT(unit_mod_time),
-		MBB_INIT_FUNC_STRUCT(unit_set_consumer),
-		MBB_INIT_FUNC_STRUCT(unit_unset_consumer),
-		MBB_INIT_FUNC_STRUCT(consumer_add_unit),
-		MBB_INIT_FUNC_STRUCT(show_mapped_units),
-		MBB_INIT_FUNC_STRUCT(show_nomapped_units),
-		MBB_INIT_FUNC_STRUCT(unit_show_self),
-		MBB_INIT_FUNC_STRUCT(show_local_units),
-		MBB_INIT_FUNC_STRUCT(unit_local_add),
-		MBB_INIT_FUNC_STRUCT(unit_local_del),
-		MBB_INIT_FUNC_STRUCT(self_show_units)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

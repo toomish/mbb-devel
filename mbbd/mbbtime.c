@@ -166,13 +166,8 @@ static void server_get_time(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans)
 	));
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-server-get-time", server_get_time, MBB_CAP_ALL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-server-get-time", server_get_time, MBB_CAP_ALL),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entry =
-		MBB_INIT_FUNC_STRUCT(server_get_time);
-
-	mbb_init_push(&entry);
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

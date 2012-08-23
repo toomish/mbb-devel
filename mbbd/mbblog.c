@@ -807,41 +807,23 @@ static void log_trace_clean(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans G_GNUC_UNUSE
 	g_static_rw_lock_writer_unlock(&rwlock);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-log-on", log_register, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-off", log_unregister, MBB_CAP_LOG);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-log-on", log_register, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-off", log_unregister, MBB_CAP_LOG),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-log-set-levels", log_set_levels, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-add-levels", log_add_levels, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-del-levels", log_del_levels, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-push", log_push, MBB_CAP_LOG);
+	MBB_FUNC_STRUCT("mbb-log-set-levels", log_set_levels, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-add-levels", log_add_levels, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-del-levels", log_del_levels, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-push", log_push, MBB_CAP_LOG),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-log-show-levels", log_show_levels, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-server-log-showall", log_showall, MBB_CAP_LOG);
+	MBB_FUNC_STRUCT("mbb-log-show-levels", log_show_levels, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-server-log-showall", log_showall, MBB_CAP_LOG),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-log-trace-show", log_trace_show, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-trace-add", log_trace_add, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-trace-del", log_trace_del, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-trace-clean", log_trace_clean, MBB_CAP_LOG);
-MBB_FUNC_REGISTER_STRUCT("mbb-log-trace-zclean", log_trace_zclean, MBB_CAP_LOG);
+	MBB_FUNC_STRUCT("mbb-log-trace-show", log_trace_show, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-trace-add", log_trace_add, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-trace-del", log_trace_del, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-trace-clean", log_trace_clean, MBB_CAP_LOG),
+	MBB_FUNC_STRUCT("mbb-log-trace-zclean", log_trace_zclean, MBB_CAP_LOG),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(log_register),
-		MBB_INIT_FUNC_STRUCT(log_unregister),
-		MBB_INIT_FUNC_STRUCT(log_set_levels),
-		MBB_INIT_FUNC_STRUCT(log_add_levels),
-		MBB_INIT_FUNC_STRUCT(log_del_levels),
-		MBB_INIT_FUNC_STRUCT(log_show_levels),
-		MBB_INIT_FUNC_STRUCT(log_push),
-		MBB_INIT_FUNC_STRUCT(log_showall),
-		MBB_INIT_FUNC_STRUCT(log_trace_add),
-		MBB_INIT_FUNC_STRUCT(log_trace_del),
-		MBB_INIT_FUNC_STRUCT(log_trace_clean),
-		MBB_INIT_FUNC_STRUCT(log_trace_zclean),
-		MBB_INIT_FUNC_STRUCT(log_trace_show)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

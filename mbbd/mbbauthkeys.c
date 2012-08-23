@@ -216,9 +216,11 @@ static void drop_auth_key(XmlTag *tag, XmlTag **ans)
 	mbb_plock_writer_unlock();
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-get-auth-key", get_auth_key, MBB_CAP_ALL);
-MBB_FUNC_REGISTER_STRUCT("mbb-show-auth-keys", show_auth_keys, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-auth-key", drop_auth_key, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-get-auth-key", get_auth_key, MBB_CAP_ALL),
+	MBB_FUNC_STRUCT("mbb-show-auth-keys", show_auth_keys, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-drop-auth-key", drop_auth_key, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
 MBB_VAR_DEF(aklt_def) {
 	.op_read = var_str_uint,
@@ -233,16 +235,4 @@ static void init_vars(void)
 	mbb_auth_method_register("key", mbb_auth_key_get_user);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_VARS,
-
-		MBB_INIT_FUNC_STRUCT(get_auth_key),
-		MBB_INIT_FUNC_STRUCT(show_auth_keys),
-		MBB_INIT_FUNC_STRUCT(drop_auth_key)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

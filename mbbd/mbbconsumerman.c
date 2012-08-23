@@ -338,31 +338,18 @@ static void consumer_unset_user(XmlTag *tag, XmlTag **ans)
 	mbb_log_debug("consumer '%s' unset user", name);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-consumers", show_consumers, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-self-show-consumers", self_show_consumers, MBB_CAP_CONS);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-consumers", show_consumers, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-self-show-consumers", self_show_consumers, MBB_CAP_CONS),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-add-consumer", add_consumer, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-consumer", drop_consumer, MBB_CAP_WHEEL);
+	MBB_FUNC_STRUCT("mbb-add-consumer", add_consumer, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-drop-consumer", drop_consumer, MBB_CAP_WHEEL),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-consumer-mod-name", consumer_mod_name, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-consumer-mod-time", consumer_mod_time, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-consumer-mod-name", consumer_mod_name, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-consumer-mod-time", consumer_mod_time, MBB_CAP_ADMIN),
 
-MBB_FUNC_REGISTER_STRUCT("mbb-consumer-set-user", consumer_set_user, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-consumer-unset-user", consumer_unset_user, MBB_CAP_ADMIN);
+	MBB_FUNC_STRUCT("mbb-consumer-set-user", consumer_set_user, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-consumer-unset-user", consumer_unset_user, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_FUNC_STRUCT(show_consumers),
-		MBB_INIT_FUNC_STRUCT(add_consumer),
-		MBB_INIT_FUNC_STRUCT(drop_consumer),
-		MBB_INIT_FUNC_STRUCT(consumer_mod_name),
-		MBB_INIT_FUNC_STRUCT(consumer_mod_time),
-		MBB_INIT_FUNC_STRUCT(consumer_set_user),
-		MBB_INIT_FUNC_STRUCT(consumer_unset_user),
-		MBB_INIT_FUNC_STRUCT(self_show_consumers)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_FUNCTIONS)

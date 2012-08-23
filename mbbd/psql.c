@@ -301,11 +301,9 @@ static struct mbb_db pg_db = {
 	.close = pq_close
 };
 
-static void __init init(void)
+static void init_local(void)
 {
-	static struct mbb_init_struct pg_db_init =
-		MBB_INIT_STRUCT(mbb_db_register, &pg_db);
-
-	mbb_init_push(&pg_db_init);
+	mbb_db_register(&pg_db);
 }
 
+MBB_ON_INIT(MBB_INIT_LOCAL)

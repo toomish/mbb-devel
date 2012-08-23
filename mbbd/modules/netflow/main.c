@@ -5,6 +5,7 @@
 
 #include "mbbxmlmsg.h"
 #include "mbbtime.h"
+#include "mbbinit.h"
 #include "mbbfunc.h"
 #include "mbbvar.h"
 #include "mbblog.h"
@@ -75,11 +76,13 @@ static void netflow_file_list(XmlTag *tag, XmlTag **ans)
 	g_slist_free(list);
 }
 
-MBB_FUNC_REGISTER_STRUCT("mbb-netflow-file-list", netflow_file_list, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-netflow-grep-unit", unit_stat, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-netflow-stat-update", update_stat, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-netflow-stat-plain", plain_stat, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-netflow-stat-feed", feed_stat, MBB_CAP_WHEEL);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-netflow-file-list", netflow_file_list, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-netflow-grep-unit", unit_stat, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-netflow-stat-update", update_stat, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-netflow-stat-plain", plain_stat, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-netflow-stat-feed", feed_stat, MBB_CAP_WHEEL),
+MBB_INIT_FUNCTIONS_END
 
 static gchar *nf_data_dir__ = NULL;
 static gchar *nf_store_dir__ = NULL;
@@ -117,11 +120,7 @@ static void load_module(void)
 	ss_nfd.data = mbb_module_add_base_var("netflow.store.dir", &nfd_def, &nf_store_dir__);
 	nf_store_var = mbb_module_add_session_var(SS_("netflow.store.dir"), &ss_nfd_def, &ss_nfd);
 
-	mbb_module_add_func(&MBB_FUNC(netflow_file_list));
-	mbb_module_add_func(&MBB_FUNC(unit_stat));
-	mbb_module_add_func(&MBB_FUNC(update_stat));
-	mbb_module_add_func(&MBB_FUNC(plain_stat));
-	mbb_module_add_func(&MBB_FUNC(feed_stat));
+	mbb_module_add_functions(MBB_INIT_FUNCTIONS_TABLE);
 }
 
 static void unload_module(void)

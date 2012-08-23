@@ -166,10 +166,12 @@ MBB_SESSION_VAR_DEF(ss_gwiv) {
 	.data = &gateway_ipview__
 };
 
-MBB_FUNC_REGISTER_STRUCT("mbb-show-gateways", show_gateways, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-add-gateway", add_gateway, MBB_CAP_ADMIN);
-MBB_FUNC_REGISTER_STRUCT("mbb-drop-gateway", drop_gateway, MBB_CAP_WHEEL);
-MBB_FUNC_REGISTER_STRUCT("mbb-gateway-mod-name", gateway_mod_name, MBB_CAP_ADMIN);
+MBB_INIT_FUNCTIONS_DO
+	MBB_FUNC_STRUCT("mbb-show-gateways", show_gateways, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-add-gateway", add_gateway, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-drop-gateway", drop_gateway, MBB_CAP_WHEEL),
+	MBB_FUNC_STRUCT("mbb-gateway-mod-name", gateway_mod_name, MBB_CAP_ADMIN),
+MBB_INIT_FUNCTIONS_END
 
 static void init_vars(void)
 {
@@ -180,17 +182,4 @@ static void init_vars(void)
 	);
 }
 
-static void __init init(void)
-{
-	static struct mbb_init_struct entries[] = {
-		MBB_INIT_VARS,
-
-		MBB_INIT_FUNC_STRUCT(show_gateways),
-		MBB_INIT_FUNC_STRUCT(add_gateway),
-		MBB_INIT_FUNC_STRUCT(drop_gateway),
-		MBB_INIT_FUNC_STRUCT(gateway_mod_name)
-	};
-
-	mbb_init_pushv(entries, NELEM(entries));
-}
-
+MBB_ON_INIT(MBB_INIT_VARS, MBB_INIT_FUNCTIONS)

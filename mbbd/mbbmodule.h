@@ -52,8 +52,7 @@ MbbModule *mbb_module_last_used(void);
 gboolean mbb_module_use(MbbModule *mod);
 void mbb_module_unuse(MbbModule *mod);
 
-void mbb_module_add_func(struct mbb_func_struct *fs);
-void mbb_module_add_funcv(struct mbb_func_struct *fs, gsize count);
+void mbb_module_add_functions(struct mbb_func_struct *fs);
 struct mbb_var *mbb_module_add_var(struct mbb_var *var);
 
 void mbb_module_export(gpointer data);
