@@ -377,6 +377,9 @@ static void slicer_apply_change(struct slicer *slicer, gpointer data,
 	g_return_if_fail(slicer != NULL);
 	g_return_if_fail(data != NULL);
 
+	if (begin_end_cmp(slicer->sops, begin, end) > 0)
+		return;
+
 	list = g_tree_lookup(slicer->tree, &slice);
 	g_assert(list != NULL);
 
