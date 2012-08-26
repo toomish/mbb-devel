@@ -28,4 +28,5 @@ module.dir = ${CMAKE_INSTALL_PREFIX}/${MBB_MODULES_INSTALL_DIR}/
 # netflow.store.dir = /where/to/store/
 
 # auth.apache.strict = false
+# map.reload.oninit = false
 
