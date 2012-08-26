@@ -911,7 +911,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 				lua_env_close(lua_env);
 				talk_fini();
 
-				errx(1, "lua_env_dofile: %s", error->message);
+				errx(1, "lua_env_dofile %s: %s", *strp, error->message);
 			}
 		}
 

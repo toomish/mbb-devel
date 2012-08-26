@@ -13,6 +13,9 @@ gboolean mbb_map_add_unit(MbbUnit *unit, struct map_cross *cross);
 void mbb_map_del_inet(MbbInetPoolEntry *entry);
 void mbb_map_del_unit(MbbUnit *unit);
 
+void mbb_map_clear(void);
+void mbb_map_auto_glue(void);
+
 MbbUMap *mbb_umap_create(void);
 MbbUMap *mbb_umap_from_unit(MbbUnit *unit);
 MbbUnit *mbb_umap_find(MbbUMap *umap, ipv4_t ip, time_t t);

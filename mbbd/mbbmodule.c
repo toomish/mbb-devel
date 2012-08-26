@@ -49,6 +49,8 @@ struct mbb_module {
 	gpointer *export;
 	GSList *deps;
 
+	void (*onready)(void);
+
 	GStaticRWLock rwlock;
 };
 
@@ -168,6 +170,14 @@ void mbb_module_push_info(MbbModuleInfo *mod_info)
 gboolean mbb_module_isrun(MbbModule *mod)
 {
 	return mod->run;
+}
+
+void mbb_module_onready(void (*onready)(void))
+{
+	MbbModule *module = mbb_module_current();
+
+	if (module != NULL)
+		module->onready = onready;
 }
 
 static inline MbbModule *mbb_module_get_by_name(gchar *name)
@@ -447,7 +457,15 @@ gboolean mbb_module_load(gchar *name, GError **error)
 	mbb_module_add(module);
 	g_static_rw_lock_writer_unlock(&module->rwlock);
 
+	if (module->onready)
+		g_static_rw_lock_reader_lock(&module->rwlock);
+
 	mbb_plock_writer_unlock();
+
+	if (module->onready) {
+		module->onready();
+		g_static_rw_lock_reader_unlock(&module->rwlock);
+	}
 
 	return TRUE;
 }

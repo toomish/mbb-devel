@@ -59,6 +59,7 @@ void mbb_module_export(gpointer data);
 gpointer mbb_module_import(gchar *name);
 
 gboolean mbb_module_isrun(MbbModule *mod);
+void mbb_module_onready(void (*onready)(void));
 
 #define MBB_DEFINE_MODULE(description) \
 static struct mbb_module_info module_info__ = { \

@@ -54,8 +54,7 @@ int caution(void)
 {
 	int ch;
 
-	printf("these actions will lead to irreparable consequences\n");
-	printf("do you want to continue (Y/N) ?");
+	printf("Are you sure (Y/N) ?");
 	fflush(stdout);
 
 	tty_echo(TTY_ECHO_OFF);

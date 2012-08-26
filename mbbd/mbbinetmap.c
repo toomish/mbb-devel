@@ -105,6 +105,12 @@ void mbb_map_del_unit(MbbUnit *unit)
 		mbb_map_del_inet(list->data);
 }
 
+void mbb_map_auto_glue(void)
+{
+	if (map_glue_auto)
+		map_glue_null(&global_map);
+}
+
 static inline struct umap_data_entry *umap_data_entry_new(struct umap_data_entry *next)
 {
 	struct umap_data_entry *entry;
@@ -320,8 +326,7 @@ static void map_add_unit(XmlTag *tag, XmlTag **ans)
 		MbbInetPoolEntry *entry;
 
 		mbb_map_del_unit(unit);
-		if (map_glue_auto)
-			map_glue_null(&global_map);
+		mbb_map_auto_glue();
 
 		entry = (MbbInetPoolEntry *) cross.data;
 		unit = entry->owner->ptr;
@@ -483,6 +488,11 @@ static void map_show_unit(XmlTag *tag, XmlTag **ans)
 	}
 
 	mbb_lock_reader_unlock();
+}
+
+void mbb_map_clear(void)
+{
+	map_clear(&global_map);
 }
 
 static void inet_map_clear(XmlTag *tag G_GNUC_UNUSED, XmlTag **ans G_GNUC_UNUSED)

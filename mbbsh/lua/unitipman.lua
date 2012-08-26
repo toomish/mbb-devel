@@ -114,7 +114,7 @@ function unit_map_rebuild(tag, name)
 	end
 end
 
-function unit_map_sync(tag, name)
+function old_unit_map_sync(tag, name)
 	local xml, msg
 
 	if tag == nil then
@@ -209,7 +209,7 @@ function map_find_unit(tag, name)
 	map_find_common(tag)
 end
 
-function map_reload(tag)
+function old_map_reload(tag)
 	local units = {}
 	local xml, msg
 
@@ -222,7 +222,7 @@ function map_reload(tag)
 
 	table.sort(units)
 	for _, name in ipairs(units) do
-		unit_map_sync(nil, name)
+		old_unit_map_sync(nil, name)
 	end
 end
 
@@ -243,7 +243,6 @@ cmd_register("unit map showall", "mbb-unit-map-showall", "unit_map_show", 1)
 cmd_register("unit map show", "mbb-unit-map-show", "unit_map_show", 1)
 cmd_register("unit map inet showall", "mbb-unit-map-inet-showall", "unit_map_inet_showall", 1)
 cmd_register("unit map reload", "mbb-unit-map-rebuild", "unit_map_rebuild", 1)
-cmd_register("unit map sync", "mbb-unit-map-rebuild", "unit_map_sync", 1)
 cmd_register("unit map clear", "mbb-unit-map-clear", "unit_map_clear", 1)
 
 cmd_register("map add", "mbb-map-add-unit", "map_do_unit", 1)
@@ -255,4 +254,9 @@ cmd_register("map clear", "mbb-map-clear")
 cmd_register("map glue null", "mbb-map-glue-null")
 cmd_register("map find net", "mbb-map-find-net", "map_find_net", 1, 3)
 cmd_register("map find unit", "mbb-map-find-unit", "map_find_unit", 1)
-cmd_register("map reload", "mbb-map-clear", "map_reload")
+
+cmd_register("map reload", "mbb-map-reload")
+cmd_register("unit map sync", "mbb-map-reload-unit", "map_do_unit", 1)
+
+cmd_register("old map reload", "mbb-map-clear", "old_map_reload")
+cmd_register("old unit map sync", "mbb-unit-map-rebuild", "old_unit_map_sync", 1)
