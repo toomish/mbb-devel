@@ -1,5 +1,6 @@
 set (MBBD_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (MBB_MODULES_INSTALL_DIR lib/mbb)
+set (MBBD_CONFIG mbbrc.default)
 
 if (NOT MBBD_CONF_DIR)
 	set (MBBD_CONF_DIR ${CMAKE_INSTALL_PREFIX}/etc/mbb)
@@ -41,7 +42,7 @@ _pg_config(libdir PGSQL_LIBRARY_DIRS)
 
 link_directories (${PGSQL_LIBRARY_DIRS})
 
-configure_file (config/mbbrc.in ${CMAKE_CURRENT_BINARY_DIR}/config/mbbrc)
+configure_file (config/${MBBD_CONFIG}.in ${CMAKE_CURRENT_BINARY_DIR}/config/${MBBD_CONFIG})
 
 file (GLOB mbbd_sources *.c)
 
@@ -53,5 +54,5 @@ add_executable (mbbd ${mbbd_sources})
 target_link_libraries (mbbd mbbutil pq dl ${MBB_LIBRARIES})
 
 install (TARGETS mbbd DESTINATION bin)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/config/mbbrc DESTINATION ${MBBD_CONF_DIR})
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/config/${MBBD_CONFIG} DESTINATION ${MBBD_CONF_DIR})
 install (DIRECTORY sql DESTINATION share/mbb FILES_MATCHING PATTERN "*.sql")

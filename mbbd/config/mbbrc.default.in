@@ -3,14 +3,14 @@ host = 0.0.0.0
 port = 3000
 
 dbtype = postgres
-modules = stat.so, netflow.so, attr.so
+modules = stat.so, netflow.so, attr.so, map_reload.so
 
 # http-port = 4444
 
 [db]
-host = 127.0.0.1
 database = mbb
 
+# host = 127.0.0.1
 # login = username
 # secret = password
 
