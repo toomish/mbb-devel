@@ -15,29 +15,39 @@
 #include "xmltag.h"
 
 #include "pathtree.h"
-#include "unitstat.h"
-#include "calcstat.h"
 
 gpointer *stat_lib = NULL;
+
+extern void update_stat(XmlTag *tag, XmlTag **ans);
+extern void plain_stat(XmlTag *tag, XmlTag **ans);
+extern void feed_stat(XmlTag *tag, XmlTag **ans);
+
+extern void unit_stat(XmlTag *tag, XmlTag **ans);
+extern void odd_stat(XmlTag *tag, XmlTag **ans);
 
 static struct mbb_var *nf_data_var = NULL;
 static struct mbb_var *nf_store_var = NULL;
 
-gchar *nf_get_store_dir(gchar *name)
+XmlTag *mbb_xml_msg_task_id(gint id)
 {
-	time_buf_t tbuf;
-	gchar **dir;
-	gchar *str;
+	XmlTag *tag;
 
-	timetoa(tbuf, time(NULL));
+	tag = mbb_xml_msg_ok();
+	xml_tag_new_child(tag, "task", "id", variant_new_int(id));
 
-	dir = mbb_session_var_get_data(nf_store_var);
-	str = g_strdup_printf("%s%s.%s", *dir, name, tbuf);
-
-	return str;
+	return tag;
 }
 
-GString *nf_get_data_dir(void)
+gchar *netflow_get_store_dir(gchar *name)
+{
+	gchar **dir;
+
+	dir = mbb_session_var_get_data(nf_store_var);
+
+	return g_strdup_printf("%s%s", *dir, name);
+}
+
+GString *netflow_get_data_dir(void)
 {
 	GString *string = NULL;
 	gchar **dir;
@@ -79,6 +89,8 @@ static void netflow_file_list(XmlTag *tag, XmlTag **ans)
 MBB_INIT_FUNCTIONS_DO
 	MBB_FUNC_STRUCT("mbb-netflow-file-list", netflow_file_list, MBB_CAP_ADMIN),
 	MBB_FUNC_STRUCT("mbb-netflow-grep-unit", unit_stat, MBB_CAP_ADMIN),
+	MBB_FUNC_STRUCT("mbb-netflow-grep-odd", odd_stat, MBB_CAP_ADMIN),
+
 	MBB_FUNC_STRUCT("mbb-netflow-stat-update", update_stat, MBB_CAP_WHEEL),
 	MBB_FUNC_STRUCT("mbb-netflow-stat-plain", plain_stat, MBB_CAP_WHEEL),
 	MBB_FUNC_STRUCT("mbb-netflow-stat-feed", feed_stat, MBB_CAP_WHEEL),

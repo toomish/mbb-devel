@@ -7,11 +7,10 @@
 #include <ftw.h>
 
 #include "pathtree.h"
+#include "netflow.h"
 #include "variant.h"
 
 #define DIR_MARK '@'
-
-GString *nf_get_data_dir(void);
 
 static inline void path_tree_init(struct path_tree *pt)
 {
@@ -82,7 +81,7 @@ gboolean path_tree_walk(struct path_tree *pt, GSList *list)
 
 	path_tree_init(pt);
 
-	if ((rpath = nf_get_data_dir()) != NULL)
+	if ((rpath = netflow_get_data_dir()) != NULL)
 		rpath_len = rpath->len;
 
 	globbuf = g_new0(glob_t, 1);

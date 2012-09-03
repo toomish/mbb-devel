@@ -16,10 +16,9 @@ function print_task(xml)
 	printf("starting task %d", xml.task._id)
 end
 
-function netflow_grep_unit(tag, name, ...)
+function netflow_grep_stat(tag, ...)
 	local xml
 
-	tag.unit._name = name
 	for n, var in pairs({ ... }) do
 		if string.sub(var, 1, 1) ~= "-" then
 			tag.glob.__next._value = var
@@ -36,6 +35,16 @@ function netflow_grep_unit(tag, name, ...)
 
 	xml = mbb.request(tag)
 	print_task(xml)
+end
+
+function netflow_grep_unit(tag, name, ...)
+	tag.unit._name = name
+	netflow_grep_stat(tag, ...)
+end
+
+function netflow_grep_odd(tag, name, ...)
+	tag.name._value = name
+	netflow_grep_stat(tag, ...)
 end
 
 function netflow_stat_feed(tag, file)
@@ -65,6 +74,7 @@ end
 
 cmd_register("netflow ls", "mbb-netflow-file-list", "netflow_file_list", nil)
 cmd_register("netflow grep unit", "mbb-netflow-grep-unit", "netflow_grep_unit", 2, nil)
+cmd_register("netflow grep odd", "mbb-netflow-grep-odd", "netflow_grep_odd", 2, nil)
 cmd_register("netflow stat feed", "mbb-netflow-stat-feed", "netflow_stat_feed", 1)
 cmd_register("netflow stat plain", "mbb-netflow-stat-plain", "netflow_stat_plain", 1, nil)
 cmd_register("netflow stat update", "mbb-netflow-stat-update", "netflow_stat_update", 4, nil)

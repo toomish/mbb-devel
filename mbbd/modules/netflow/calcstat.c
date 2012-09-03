@@ -3,8 +3,7 @@
 
 #include <stdarg.h>
 
-#include "pathtree.h"
-#include "flow.h"
+#include "netflow.h"
 
 #include "mbbinetmap.h"
 #include "mbbgateway.h"
@@ -23,10 +22,6 @@
 #define PLAIN_STAT_TASK (plain_stat_quark())
 #define UPDATE_STAT_TASK (update_stat_quark())
 #define FEED_STAT_TASK (feed_stat_quark())
-
-extern struct stat_interface *stat_lib;
-
-GString *nf_get_data_dir(void);
 
 struct base_task_data {
 	struct mbb_stat_pool *pool;
@@ -287,7 +282,6 @@ static XmlTag *base_task_do(GSList *list, gboolean update, ...)
 	struct path_tree pt;
 	GQuark task_name;
 	MbbUMap *umap;
-	XmlTag *tag;
 	gint id;
 
 	if (! path_tree_walk(&pt, list))
@@ -320,31 +314,22 @@ static XmlTag *base_task_do(GSList *list, gboolean update, ...)
 		td = (gpointer) utd;
 	}
 
-	id = mbb_task_create(task_name, &base_task_hook, td);
-
-	if (id < 0)
+	if ((id = mbb_task_create(task_name, &base_task_hook, td)) < 0)
 		return mbb_xml_msg(MBB_MSG_TASK_CREATE_FAILED);
 
-	tag = mbb_xml_msg_ok();
-	xml_tag_new_child(tag, "task", "id", variant_new_int(id));
-
-	return tag;
+	return mbb_xml_msg_task_id(id);
 }
 
-static gboolean get_glob_list(XmlTag *tag, GSList **ptr, XmlTag **ans)
+GSList *netflow_get_glob_list(XmlTag *tag, XmlTag **ans)
 {
 	GSList *list;
 
 	list = xml_tag_path_attr_list(tag, "glob", "value");
 
-	if (list == NULL) {
+	if (list == NULL)
 		*ans = mbb_xml_msg_error("nothing to do");
-		return FALSE;
-	}
 
-	*ptr = list;
-
-	return TRUE;
+	return list;
 }
 
 void update_stat(XmlTag *tag, XmlTag **ans)
@@ -362,7 +347,7 @@ void update_stat(XmlTag *tag, XmlTag **ans)
 	if (! stat_lib->parse_tag(&start, &end, period, NULL, ans))
 		return;
 
-	if (get_glob_list(tag, &list, ans) == FALSE)
+	if ((list = netflow_get_glob_list(tag, ans)) == NULL)
 		return;
 
 	*ans = base_task_do(list, TRUE, start, end);
@@ -374,7 +359,7 @@ void plain_stat(XmlTag *tag, XmlTag **ans)
 {
 	GSList *list;
 
-	if (get_glob_list(tag, &list, ans)) {
+	if ((list = netflow_get_glob_list(tag, ans)) != NULL) {
 		*ans = base_task_do(list, FALSE);
 		g_slist_free(list);
 	}
@@ -440,7 +425,7 @@ static FlowStream *flow_from_tag(XmlTag *tag, XmlTag **ans)
 	if (*tmp == '/')
 		name = tmp;
 	else {
-		GString *string = nf_get_data_dir();
+		GString *string = netflow_get_data_dir();
 
 		if (string == NULL) {
 			*ans = mbb_xml_msg_error("netflow data dir not set");
@@ -488,13 +473,11 @@ void feed_stat(XmlTag *tag, XmlTag **ans)
 	td->umap = umap;
 	td->pool = NULL;
 
-	id = mbb_task_create(FEED_STAT_TASK, &feed_stat_hook, td);
-	if (id < 0) final {
+	if ((id = mbb_task_create(FEED_STAT_TASK, &feed_stat_hook, td)) < 0) final {
 		feed_stat_free(td);
 		*ans = mbb_xml_msg(MBB_MSG_TASK_CREATE_FAILED);
 	}
 
-	*ans = mbb_xml_msg_ok();
-	xml_tag_new_child(*ans, "task", "id", variant_new_int(id));
+	*ans = mbb_xml_msg_task_id(id);
 }
 
