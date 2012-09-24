@@ -94,7 +94,7 @@ function unit_timeoff(tag, unit, time)
 	if time == nil then time = "now" end
 
 	unit_mod_time_end(tag, unit, time)
-	unit_map_sync(nil, unit)
+	unit_map_sync(unit)
 end
 
 function unit_local_do(tag, name)

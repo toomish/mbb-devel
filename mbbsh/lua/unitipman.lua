@@ -137,6 +137,10 @@ function old_unit_map_sync(tag, name)
 	end
 end
 
+function unit_map_sync(unit)
+	map_do_unit(mbb.tag "mbb-map-reload-unit", unit)
+end
+
 function unit_map_clear(tag, name)
 	tag.name._value = name
 	mbb.request(tag)
