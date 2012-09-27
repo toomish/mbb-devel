@@ -77,11 +77,16 @@ function server_get_time(tag)
 end
 
 function show_sessions(tag)
+	local sort_by = "_sid"
 	local xml
 
 	xml = mbb.request(tag)
 
-	for n, xt in ipairs(xml_tag_nsort(xml.session, "_sid")) do
+	if xml.session._mtime and get_set("session.sort.mtime") == "yes" then
+		sort_by = "_mtime"
+	end
+
+	for n, xt in ipairs(xml_tag_nsort(xml.session, sort_by)) do
 		local fmt = "%-7s%10s@%-15s {%s}"
 
 		if not xt._mtime then
