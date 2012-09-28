@@ -79,8 +79,11 @@ __newindex = function (table, key, value)
 
 	-- make body assign here
 	if t_name == "__childs" then
-		value.__self = key
-		setmetatable(value, xml_meta)
+		if getmetatable(value) == xml_meta then
+			value.__self = key
+		else
+			value = xml_new(key, value)
+		end
 	end
 
 	t = rawget(table, t_name)
@@ -124,6 +127,14 @@ __tostring = function (xml)
 	end
 
 	return table.concat(l)
+end,
+
+__call = function (xml, table)
+	if type(table) == "table" then
+		xml_apply(xml, table)
+	end
+
+	return xml
 end
 }
 
@@ -194,11 +205,25 @@ function xml_tag_nsort(tag, field)
 	return xml_tag_fsort(tag, cmp)
 end
 
-function xml_new(name)
+function xml_apply(xml, table)
+	for key, value in pairs(table) do
+		if type(value) == "table" then
+			xml[key] = xml_new(key, value)
+		else
+			xml[key] = value
+		end
+	end
+end
+
+function xml_new(name, table)
 	local t = {}
 
 	setmetatable(t, xml_meta)
 	t.__self = name
+
+	if table then
+		xml_apply(t, table)
+	end
 
 	return t
 end
