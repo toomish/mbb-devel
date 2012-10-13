@@ -515,6 +515,19 @@ static void internal_reload(gint argc, gchar **argv G_GNUC_UNUSED)
 	reload_func_tree();
 }
 
+static gchar *lua_get_set(gchar *name)
+{
+	GError *error = NULL;
+	gchar *value = NULL;
+
+	if (lua_env_get_set(lua_env, name, &value, &error) == FALSE) {
+		g_print("ERR: %s\n", error->message);
+		g_error_free(error);
+	}
+
+	return value;
+}
+
 static void internal_su(gint argc, gchar **argv)
 {
 	gchar *user = "root";
@@ -533,6 +546,14 @@ static void internal_su(gint argc, gchar **argv)
 		msg_err("getpass");
 	else if (auth_plain(user, pass) == FALSE)
 		g_print("ERR: auth failed\n");
+	else {
+		gchar *value = lua_get_set("su.autoreload");
+
+		if (g_strcmp0(value, "yes") == 0)
+			reload_func_tree();
+
+		g_free(value);
+	}
 }
 
 static void internal_help(gint argc G_GNUC_UNUSED, gchar **argv G_GNUC_UNUSED)

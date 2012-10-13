@@ -42,6 +42,7 @@ gboolean lua_env_dofile(lua_env_t lua_env, const gchar *filename, GError **error
 gboolean lua_env_call(lua_env_t lua_env, struct cmd_params *p, GError **error);
 gboolean lua_env_info(lua_env_t lua_env, gchar *func, struct lua_func_info *fi,
 		      GError **error);
+gboolean lua_env_get_set(lua_env_t lua_env, gchar *name, gchar **value, GError **error);
 void lua_env_close(lua_env_t lua_env);
 
 #endif

@@ -1,9 +1,16 @@
+local check_yesno = function (str)
+	return str == "no" or str == "yes"
+end
+
 local settings = {
 	["session.sort.mtime"] = {
 		value = "no",
-		check = function (str)
-			return str == "no" or str == "yes"
-		end
+		check = check_yesno
+	},
+
+	["su.autoreload"] = {
+		value = "no",
+		check = check_yesno
 	}
 }
 

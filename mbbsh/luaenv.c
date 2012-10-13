@@ -200,6 +200,30 @@ gboolean lua_env_info(lua_State *ls, gchar *func, struct lua_func_info *fi,
 	return TRUE;
 }
 
+gboolean lua_env_get_set(lua_State *ls, gchar *name, gchar **value, GError **error)
+{
+	gint ecode;
+
+	lua_getglobal(ls, "get_set");
+	lua_pushstring(ls, name);
+
+	ecode = lua_pcall(ls, 1, 1, 0);
+
+	if (ecode) {
+		lua_env_set_error(ls, ecode, error);
+		return FALSE;
+	}
+
+	if (lua_isnil(ls, -1))
+		*value = NULL;
+	else
+		*value = g_strdup(luaL_checkstring(ls, -1));
+
+	lua_pop(ls, 1);
+
+	return TRUE;
+}
+
 void lua_env_close(lua_State *ls)
 {
 	lua_close(ls);
