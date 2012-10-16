@@ -45,6 +45,7 @@ static const gchar *opt_dir = DEFAULT_LUA_DIR;
 static gchar **opt_file = NULL;
 static gboolean opt_nosh = FALSE;
 static gboolean opt_follow = FALSE;
+static gboolean opt_salt = FALSE;
 static gboolean caught_sigint = FALSE;
 static gboolean info_mode = FALSE;
 
@@ -528,6 +529,14 @@ static gchar *lua_get_set(gchar *name)
 	return value;
 }
 
+static gboolean do_auth(const gchar *user, const gchar *pass)
+{
+	if (opt_salt)
+		return auth_salt(user, pass);
+
+	return auth_plain(user, pass);
+}
+
 static void internal_su(gint argc, gchar **argv)
 {
 	gchar *user = "root";
@@ -544,7 +553,7 @@ static void internal_su(gint argc, gchar **argv)
 	pass = getpass("password: ");
 	if (pass == NULL)
 		msg_err("getpass");
-	else if (auth_plain(user, pass) == FALSE)
+	else if (do_auth(user, pass) == FALSE)
 		g_print("ERR: auth failed\n");
 	else {
 		gchar *value = lua_get_set("su.autoreload");
@@ -857,6 +866,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 		{ "load", 'l', 0, G_OPTION_ARG_FILENAME_ARRAY, &opt_file, "lua file to execute", NULL },
 		{ "nosh", 'n', 0, G_OPTION_ARG_NONE, &opt_nosh, "no shell, scripts only", NULL },
 		{ "follow", 'f', 0, G_OPTION_ARG_NONE, &opt_follow, "show output when stdin is closed", NULL },
+		{ "salt", 0, 0, G_OPTION_ARG_NONE, &opt_salt, "enable salt authorization", NULL },
 		{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
 	};
 
@@ -909,6 +919,9 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 	talk_register_handler("log", log_handler);
 	talk_register_handler("kill", kill_handler);
 
+	if (opt_salt)
+		talk_register_handler("salt", salt_handler);
+
 	if (talk_init((gchar *) opt_host, (gchar *) opt_serv) == FALSE)
 		errx(1, "talk failed");
 
@@ -919,7 +932,7 @@ int main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 				err(1, "getpass");
 		}
 
-		if (auth_plain(opt_user, opt_pass) == FALSE)
+		if (do_auth(opt_user, opt_pass) == FALSE)
 			errx(1, "auth failed");
 	} else if (auth_key(opt_key) == FALSE)
 		errx(1, "auth failed");

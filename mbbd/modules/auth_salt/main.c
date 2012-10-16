@@ -1,4 +1,4 @@
-/* Copyright (C) 2010 Mikhail Osipov <mike.osipov@gmail.com> */
+/* Copyright (C) 2012 Mikhail Osipov <mike.osipov@gmail.com> */
 /* Published under the GNU General Public License V.2, see file COPYING */
 
 #include "mbbmodule.h"
@@ -11,9 +11,10 @@
 #include "macros.h"
 #include "debug.h"
 
+#include "private/interface.h"
+
 #include <string.h>
 
-#define AUTH_SALT_VAR MBB_SESSION_VAR_PREFIX "auth.salt.value"
 #define SALTLEN 16
 
 static gpointer auth_method_key = NULL;
@@ -23,14 +24,20 @@ static gsize checksum_length;
 
 static const gchar *auth_salt_type = "md5";
 
+static struct private_interface *private_lib = NULL;
+static gpointer salt_key = &salt_key;
+
 static inline gchar *salt_get(void)
 {
-	return mbb_var_cache_get(AUTH_SALT_VAR);
+	return private_lib->get(salt_key);
 }
 
 static inline void salt_set(gchar *salt)
 {
-	mbb_var_cache_add(g_strdup(AUTH_SALT_VAR), salt);
+	if (! private_lib->set(salt_key, salt)) {
+		private_lib->init(salt_key, g_free);
+		private_lib->set(salt_key, salt);
+	}
 }
 
 static gchar *salt_new(void)
@@ -54,8 +61,6 @@ static gchar *salt_new(void)
 
 	g_rand_free(rand);
 
-	salt_set(salt);
-
 	return salt;
 }
 
@@ -74,8 +79,10 @@ static MbbUser *auth_salt(gchar *login, gchar *secret)
 			return NULL;
 
 		salt = salt_new();
-		msg = g_strdup_printf("<salt>%s</salt>", salt);
+		salt_set(salt);
 
+		msg = g_strdup_printf("<salt>%s</salt>", salt);
+		mbb_log_lvl(MBB_LOG_XML, "send: %s", msg);
 		mbb_msg_queue_push_alloc(msg_queue, msg, strlen(msg));
 
 		return NULL;
@@ -115,6 +122,9 @@ static void load_module(void)
 
 	checksum_length = length;
 
+	if ((private_lib = mbb_module_import("private.so")) == NULL) final
+		mbb_log_self("import module private.so failed");
+
 	auth_method_key = mbb_auth_method_register("salt", auth_salt);
 	if (auth_method_key == NULL) final
 		mbb_log_self("failed to register auth method");
@@ -125,6 +135,9 @@ static void load_module(void)
 static void unload_module(void)
 {
 	mbb_auth_method_unregister(auth_method_key);
+
+	if (private_lib != NULL)
+		private_lib->remove(salt_key);
 }
 
 MBB_DEFINE_MODULE("salt authorization method")

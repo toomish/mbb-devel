@@ -4,9 +4,12 @@
 #ifndef AUTH_H
 #define AUTH_H
 
-#include <glib.h>
+#include "xmltag.h"
 
 gboolean auth_plain(const gchar *user, const gchar *pass);
 gboolean auth_key(const gchar *key);
+
+void salt_handler(XmlTag *tag);
+gboolean auth_salt(const gchar *user, const gchar *pass);
 
 #endif

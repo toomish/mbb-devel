@@ -1,4 +1,4 @@
-set (MBB_MODULES attr auth_apache auth_salt stat netflow map_reload)
+set (MBB_MODULES attr auth_apache auth_salt stat netflow map_reload private)
 
 set (MBB_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
